@@ -45,12 +45,28 @@ flowchart TD
 
   subgraph POS["POS experience"]
     PosGroup --> PTables[Tables<br/>areas + grid]
-    PTables -->|tap table| POrder[Order<br/>/(pos)/orders/:tableId]
-    POrder -->|Cobrar| PPay[Payment<br/>/(pos)/payments/:tableId]
+    PTables -->|tap table| POrder[Order<br/>/(pos)/tables/orders/:tableId]
+    POrder -->|Cobrar| PPay[Payment<br/>/(pos)/tables/payments/:tableId]
     PPay -->|Pago completado| PTables
     PosGroup --> PProfile[Profile<br/>logout]
   end
 ```
+
+### Tab bars
+
+Each role uses its own tab navigator (`(manager)` and `(pos)`), split by platform:
+
+- **iOS:** `NativeTabs` (`expo-router/unstable-native-tabs`) renders the system
+  tab bar, so iOS 26 applies the Liquid Glass treatment automatically. Icons use
+  SF Symbols and are tinted with the brand color.
+- **Android / web:** `Tabs` (`expo-router/js-tabs`) with a custom
+  `FloatingTabBar` (`src/components/floating-tab-bar.tsx`) — a rounded pill bar
+  whose active pill slides between tabs with a spring (Reanimated). Icons use
+  Ionicons.
+
+POS detail screens (`orders/[tableId]`, `payments/[tableId]`) live inside the
+`tables` tab as a nested `Stack`. Keeping them out of the tab list this way is
+required because native tabs cannot navigate to hidden routes.
 
 ## Data flow
 

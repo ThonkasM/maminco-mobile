@@ -18,6 +18,7 @@ import {
   type OrderStatusChangedEvent,
 } from '@/lib/realtime/socket';
 import { useAuth } from '@/providers/auth-provider';
+import { useFeedback } from '@/providers/feedback-provider';
 
 interface CartLine {
   product: Product;
@@ -29,6 +30,7 @@ export default function PosOrderScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, session } = useAuth();
+  const { notify, confirm } = useFeedback();
   const params = useLocalSearchParams<{ tableId: string }>();
   const tableId = typeof params.tableId === 'string' ? params.tableId : params.tableId?.[0];
 
@@ -46,7 +48,6 @@ export default function PosOrderScreen() {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   const reloadOrder = useCallback(async () => {
     if (!tableId) return;
@@ -54,11 +55,11 @@ export default function PosOrderScreen() {
       const active = await ordersApi.getActiveOrderByTable(tableId);
       setOrder(active);
     } catch (err) {
-      setActionError(getErrorMessage(err));
+      notify('error', getErrorMessage(err));
     } finally {
       setOrderLoading(false);
     }
-  }, [tableId]);
+  }, [tableId, notify]);
 
   useEffect(() => {
     void reloadOrder();
@@ -123,8 +124,8 @@ export default function PosOrderScreen() {
 
   const submitCart = async () => {
     if (!user || !tableId || cartLines.length === 0) return;
+    const creating = !order;
     setSubmitting(true);
-    setActionError(null);
     try {
       if (!order) {
         const created = await ordersApi.createOrder({
@@ -146,8 +147,9 @@ export default function PosOrderScreen() {
         await reloadOrder();
       }
       setCart({});
+      notify('success', creating ? 'Orden creada correctamente' : 'Productos agregados a la orden');
     } catch (err) {
-      setActionError(getErrorMessage(err));
+      notify('error', getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -156,13 +158,12 @@ export default function PosOrderScreen() {
   const changeItemQuantity = async (itemId: string, quantity: number) => {
     if (!order) return;
     setSubmitting(true);
-    setActionError(null);
     try {
       if (quantity <= 0) await ordersApi.removeOrderItem(order.id, itemId);
       else await ordersApi.updateOrderItem(order.id, itemId, { quantity });
       await reloadOrder();
     } catch (err) {
-      setActionError(getErrorMessage(err));
+      notify('error', getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -171,20 +172,32 @@ export default function PosOrderScreen() {
   const changeStatus = async (status: OrderStatus) => {
     if (!order) return;
     setSubmitting(true);
-    setActionError(null);
     try {
       await ordersApi.changeOrderStatus(order.id, { status });
       await reloadOrder();
+      notify('success', status === 'CANCELLED' ? 'Orden cancelada' : 'Orden actualizada');
     } catch (err) {
-      setActionError(getErrorMessage(err));
+      notify('error', getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
   };
 
+  const requestCancelOrder = async () => {
+    const ok = await confirm({
+      title: 'Cancelar orden',
+      message:
+        'Se marcará la orden como cancelada y la mesa volverá a estar libre. Esta acción no se puede deshacer.',
+      confirmText: 'Sí, cancelar',
+      cancelText: 'Volver',
+      destructive: true,
+    });
+    if (ok) await changeStatus('CANCELLED');
+  };
+
   const goToPayment = () => {
     if (!tableId) return;
-    router.push(`/(pos)/payments/${tableId}`);
+    router.push(`/(pos)/tables/payments/${tableId}`);
   };
 
   if (orderLoading && categoriesLoading && productsLoading) {
@@ -227,13 +240,6 @@ export default function PosOrderScreen() {
             />
           ) : null}
         </View>
-
-        {actionError ? (
-          <View style={[styles.error, { backgroundColor: colors.surfaceAlt }]}>
-            <Ionicons name="alert-circle-outline" size={16} color={colors.danger} />
-            <Text style={[styles.errorText, { color: colors.danger }]}>{actionError}</Text>
-          </View>
-        ) : null}
 
         {order ? (
           <Card title="Pedido actual" subtitle={`${order.itemCount} ítems`} style={styles.section}>
@@ -295,7 +301,7 @@ export default function PosOrderScreen() {
                 title="Cancelar orden"
                 variant="outline"
                 icon="close-circle-outline"
-                onPress={() => changeStatus('CANCELLED')}
+                onPress={requestCancelOrder}
                 loading={submitting}
                 style={styles.flex}
               />

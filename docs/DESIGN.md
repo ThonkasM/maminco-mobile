@@ -82,3 +82,17 @@ Weights: `regular 400 · medium 500 · semibold 600 · bold 700`.
 
 - `EmptyState` for zero-data and error states (icon, title, description, action).
 - `Skeleton` for animated loading placeholders.
+
+### Feedback (notifications & confirmation)
+
+Use `useFeedback()` (from `src/providers/feedback-provider.tsx`) instead of
+`Alert` or ad-hoc inline state:
+
+- `notify('success' | 'error' | 'info', message)` — shows a **centred, brand-styled
+  banner** at the top of the screen that auto-dismisses (5s for errors). Use it for
+  the result of an action (order created, payment completed, request failed).
+- `confirm({ title, message, confirmText, cancelText, destructive })` — returns
+  `Promise<boolean>` and renders a **centred confirmation dialog**. Use it before
+  destructive or irreversible actions (e.g. cancelling an order).
+
+Both use the semantic theme tokens, so they follow light/dark automatically.

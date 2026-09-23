@@ -11,7 +11,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { fontSize, fontWeight, radii, spacing, type ThemeColors } from '@/constants/theme';
+import { fontSize, fontWeight, palette, radii, spacing, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'accent';
@@ -50,7 +50,7 @@ function variantColors(
     case 'ghost':
       return { background: 'transparent', border: 'transparent', content: colors.primary };
     case 'danger':
-      return { background: colors.danger, border: colors.danger, content: '#ffffff' };
+      return { background: colors.danger, border: colors.danger, content: palette.white };
     default:
       return { background: colors.primary, border: colors.primary, content: colors.onPrimary };
   }

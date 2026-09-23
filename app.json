@@ -8,15 +8,27 @@
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.maminco.mobile",
+      "appleTeamId": "7MWYA8BMK6",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
     },
     "android": {
+      "package": "com.maminco.mobile",
+      "versionCode": 1,
+      "permissions": ["android.permission.INTERNET"],
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/monochrome-icon.png",
         "backgroundColor": "#0a0d12"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "bundler": "metro",
@@ -31,7 +43,23 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 180
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0",
+            "minSdkVersion": 24,
+            "usesCleartextTraffic": true
+          },
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
+      ],
+      "./plugins/with-ios-signing"
     ]
   }
 }

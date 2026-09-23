@@ -1,9 +1,43 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Redirect, Tabs } from 'expo-router';
-import React from 'react';
+import { Redirect } from 'expo-router';
+import { Tabs } from 'expo-router/js-tabs';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Platform } from 'react-native';
+import type { SFSymbol } from 'sf-symbols-typescript';
 
+import FloatingTabBar from '@/components/floating-tab-bar';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/auth-provider';
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
+type SfIcon = SFSymbol | { default?: SFSymbol; selected: SFSymbol };
+
+const TABS: { name: string; title: string; icon: IoniconName; sf: SfIcon }[] = [
+  {
+    name: 'index',
+    title: 'Panel',
+    icon: 'grid-outline',
+    sf: { default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' },
+  },
+  {
+    name: 'metrics',
+    title: 'Métricas',
+    icon: 'stats-chart-outline',
+    sf: { default: 'chart.bar', selected: 'chart.bar.fill' },
+  },
+  {
+    name: 'forecast',
+    title: 'Pronóstico',
+    icon: 'trending-up-outline',
+    sf: 'chart.line.uptrend.xyaxis',
+  },
+  {
+    name: 'tables',
+    title: 'Mesas',
+    icon: 'restaurant-outline',
+    sf: { default: 'tablecells', selected: 'tablecells.fill' },
+  },
+];
 
 export default function ManagerLayout() {
   const { colors } = useTheme();
@@ -13,53 +47,36 @@ export default function ManagerLayout() {
   if (!user) return <Redirect href="/login" />;
   if (!isManager) return <Redirect href="/(pos)/tables" />;
 
+  if (Platform.OS === 'ios') {
+    return (
+      <NativeTabs tintColor={colors.primary}>
+        {TABS.map((tab) => (
+          <NativeTabs.Trigger key={tab.name} name={tab.name}>
+            <NativeTabs.Trigger.Label>{tab.title}</NativeTabs.Trigger.Label>
+            <NativeTabs.Trigger.Icon sf={tab.sf} />
+          </NativeTabs.Trigger>
+        ))}
+      </NativeTabs>
+    );
+  }
+
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-        },
-        tabBarLabelStyle: { fontSize: 11 },
-      }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Panel',
-          tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="metrics"
-        options={{
-          title: 'Métricas',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="stats-chart-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="forecast"
-        options={{
-          title: 'Pronóstico',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trending-up-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="tables"
-        options={{
-          title: 'Mesas',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="restaurant-outline" size={size} color={color} />
-          ),
-        }}
-      />
+      {TABS.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name={tab.icon} size={size} color={color} />
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

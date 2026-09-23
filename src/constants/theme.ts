@@ -6,6 +6,8 @@
  * hardcoding hex values. See `docs/DESIGN.md` for the rules.
  */
 
+import { Platform } from 'react-native';
+
 export const palette = {
   darkGreen: '#143f29',
   darkGray: '#191919',
@@ -112,11 +114,17 @@ export const fontWeight = {
 
 export const shadow = {
   card: {
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    // `shadow*` is deprecated on web (react-native-web) in favour of `boxShadow`.
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08), 0px 1px 2px rgba(0, 0, 0, 0.06)' },
+      default: {
+        shadowColor: '#000000',
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 2,
+      },
+    }),
   },
 } as const;
 

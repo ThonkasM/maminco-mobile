@@ -7,10 +7,12 @@ import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getErrorMessage } from '@/lib/format';
 import { useAuth } from '@/providers/auth-provider';
+import { useFeedback } from '@/providers/feedback-provider';
 
 export default function LoginScreen() {
   const { colors } = useTheme();
   const { signIn } = useAuth();
+  const { notify } = useFeedback();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +22,7 @@ export default function LoginScreen() {
   const handleSubmit = async () => {
     if (!email.trim() || !password) {
       setError('Ingresa tu correo y contraseña.');
+      notify('error', 'Ingresa tu correo y contraseña.');
       return;
     }
     setLoading(true);
@@ -29,6 +32,7 @@ export default function LoginScreen() {
       // The root layout redirects to the correct experience based on the role.
     } catch (err) {
       setError(getErrorMessage(err));
+      notify('error', getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -41,9 +45,7 @@ export default function LoginScreen() {
         style={styles.flex}
       >
         <View style={styles.brand}>
-          <View style={[styles.logo, { backgroundColor: colors.primary }]}>
-            <Ionicons name="restaurant" size={30} color={colors.accent} />
-          </View>
+          <Image source={require('@/assets/icons/maminco-logo.png')} style={styles.logo} />
           <Text style={[styles.title, { color: colors.text }]}>Maminco</Text>
           <Text style={[styles.subtitle, { color: colors.muted }]}>
             Sistema de punto de venta
@@ -121,11 +123,9 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   logo: {
-    width: 64,
-    height: 64,
+    width: 76,
+    height: 76,
     borderRadius: radii.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   title: {

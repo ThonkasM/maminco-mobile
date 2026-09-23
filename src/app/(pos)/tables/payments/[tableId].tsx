@@ -10,6 +10,7 @@ import { useAsync } from '@/hooks/use-async';
 import { ordersApi, paymentsApi } from '@/lib/api';
 import type { Order, PaymentProcessResult } from '@/lib/api/types';
 import { formatCurrency, getErrorMessage, toNumber } from '@/lib/format';
+import { useFeedback } from '@/providers/feedback-provider';
 
 function methodIcon(code: string): keyof typeof Ionicons.glyphMap {
   const normalized = code.toUpperCase();
@@ -22,6 +23,7 @@ function methodIcon(code: string): keyof typeof Ionicons.glyphMap {
 export default function PosPaymentScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { notify } = useFeedback();
   const params = useLocalSearchParams<{ tableId: string }>();
   const tableId = typeof params.tableId === 'string' ? params.tableId : params.tableId?.[0];
 
@@ -78,11 +80,10 @@ export default function PosPaymentScreen() {
       if (!order || !methodId) return;
       const amountReceived = Number(amount);
       if (!Number.isFinite(amountReceived) || amountReceived <= 0) {
-        setError('Ingresa un monto válido.');
+        notify('error', 'Ingresa un monto válido.');
         return;
       }
       setSubmitting(true);
-      setError(null);
       try {
         const response = await paymentsApi.processPayment(order.id, {
           paymentMethodId: methodId,
@@ -90,14 +91,18 @@ export default function PosPaymentScreen() {
           ...(isExtraTip ? { isExtraTip: true } : {}),
         });
         setResult(response);
-        if (response.status === 'ERROR') setError(response.message);
+        if (response.status === 'ERROR') {
+          notify('error', response.message);
+        } else if (response.status === 'COMPLETED') {
+          notify('success', 'Pago completado');
+        }
       } catch (err) {
-        setError(getErrorMessage(err));
+        notify('error', getErrorMessage(err));
       } finally {
         setSubmitting(false);
       }
     },
-    [order, methodId, amount],
+    [order, methodId, amount, notify],
   );
 
   const isCompleted = result?.status === 'COMPLETED';

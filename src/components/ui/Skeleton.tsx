@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Animated, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Platform, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { radii } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -16,10 +16,11 @@ export function Skeleton({ width = '100%', height = 16, radius = radii.sm, style
   const [opacity] = useState(() => new Animated.Value(0.4));
 
   useEffect(() => {
+    const useNativeDriver = Platform.OS !== 'web';
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver }),
       ]),
     );
     loop.start();

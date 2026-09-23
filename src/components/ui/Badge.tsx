@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { fontSize, fontWeight, radii, spacing, type ThemeColors } from '@/constants/theme';
+import { fontSize, fontWeight, palette, radii, spacing, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type BadgeTone = 'neutral' | 'primary' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
@@ -21,13 +21,13 @@ function toneColors(tone: BadgeTone, colors: ThemeColors): { background: string;
     case 'accent':
       return { background: colors.accent, text: colors.onAccent };
     case 'success':
-      return { background: colors.success, text: '#ffffff' };
+      return { background: colors.success, text: palette.white };
     case 'warning':
-      return { background: colors.warning, text: '#191919' };
+      return { background: colors.warning, text: palette.darkGray };
     case 'danger':
-      return { background: colors.danger, text: '#ffffff' };
+      return { background: colors.danger, text: palette.white };
     case 'info':
-      return { background: colors.info, text: '#ffffff' };
+      return { background: colors.info, text: palette.white };
     case 'neutral':
     default:
       return { background: colors.surfaceAlt, text: colors.text };

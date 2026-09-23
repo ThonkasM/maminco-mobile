@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
+import { FeedbackProvider } from '@/providers/feedback-provider';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -21,7 +22,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <AuthProvider>
-          <RootNavigator fontsLoaded={fontsLoaded} />
+          <FeedbackProvider>
+            <RootNavigator fontsLoaded={fontsLoaded} />
+          </FeedbackProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -76,7 +79,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
   }
 
   return (
-    <>
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -88,7 +91,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Screen name="(manager)" />
         <Stack.Screen name="(pos)" />
       </Stack>
-    </>
+    </ThemeProvider>
   );
 }
 

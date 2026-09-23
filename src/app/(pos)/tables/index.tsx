@@ -37,7 +37,7 @@ export default function PosTablesScreen() {
   );
 
   const openOrder = (tableId: string) => {
-    router.push(`/(pos)/orders/${tableId}`);
+    router.push(`/(pos)/tables/orders/${tableId}`);
   };
 
   return (
