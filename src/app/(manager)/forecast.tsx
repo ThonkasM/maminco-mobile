@@ -8,6 +8,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { forecastApi, isNotFound } from '@/lib/api';
 import type { ForecastPoint } from '@/lib/api/types';
 import { formatCurrency, getErrorMessage } from '@/lib/format';
+import { useErrorNotification } from '@/hooks/use-error-notification';
 
 type ForecastState = 'loading' | 'ready' | 'empty' | 'error';
 
@@ -44,6 +45,8 @@ export default function ManagerForecastScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useErrorNotification(state === 'error' ? message : null, points.length > 0);
 
   const bars: BarDatum[] = points.map((point, index) => ({
     label: forecastApi.forecastPointLabel(point, index),

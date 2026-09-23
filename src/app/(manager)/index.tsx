@@ -6,6 +6,7 @@ import { Card, EmptyState, Screen, Skeleton } from '@/components/ui';
 import { fontSize, fontWeight, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAsync } from '@/hooks/use-async';
+import { useErrorNotification } from '@/hooks/use-error-notification';
 import { reportsApi } from '@/lib/api';
 import { formatCurrency, formatNumber } from '@/lib/format';
 
@@ -15,6 +16,8 @@ export default function ManagerDashboardScreen() {
     () => reportsApi.getDailyReport(5),
     [],
   );
+
+  useErrorNotification(error, Boolean(data));
 
   const sales = data?.sales;
   const topProducts = data?.topProducts ?? [];

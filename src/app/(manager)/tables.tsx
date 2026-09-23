@@ -5,6 +5,7 @@ import { Badge, Card, EmptyState, Screen, Skeleton } from '@/components/ui';
 import { fontSize, fontWeight, radii, spacing, tableStatusColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { countByStatus, useTablesRealtime } from '@/hooks/use-tables-realtime';
+import { useErrorNotification } from '@/hooks/use-error-notification';
 import type { TableStatus } from '@/lib/api/types';
 
 const STATUS_ORDER: TableStatus[] = ['AVAILABLE', 'OCCUPIED', 'RESERVED'];
@@ -12,6 +13,8 @@ const STATUS_ORDER: TableStatus[] = ['AVAILABLE', 'OCCUPIED', 'RESERVED'];
 export default function ManagerTablesScreen() {
   const { colors } = useTheme();
   const { tables, loading, error, connected, refresh } = useTablesRealtime();
+
+  useErrorNotification(error, tables.length > 0);
 
   const counts = useMemo(() => countByStatus(tables), [tables]);
   const byArea = useMemo(() => {

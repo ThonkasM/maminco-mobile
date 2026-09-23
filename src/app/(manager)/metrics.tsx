@@ -7,6 +7,7 @@ import { Card, EmptyState, Screen, Skeleton } from '@/components/ui';
 import { fontSize, fontWeight, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAsync } from '@/hooks/use-async';
+import { useErrorNotification } from '@/hooks/use-error-notification';
 import { reportsApi } from '@/lib/api';
 import { formatCurrency, formatNumber } from '@/lib/format';
 
@@ -16,6 +17,8 @@ export default function ManagerMetricsScreen() {
     () => reportsApi.getTodayTopProducts(8),
     [],
   );
+
+  useErrorNotification(error, Boolean(data));
 
   const bars: BarDatum[] = (data ?? []).map((product) => ({
     label: product.productName,
