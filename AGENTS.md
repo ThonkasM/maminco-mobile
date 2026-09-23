@@ -33,6 +33,10 @@ npm run lint       # expo lint
   values in screens. Tokens and rules live in `docs/DESIGN.md`.
 - API access goes through `src/lib/api/*`; never call `fetch` directly.
 - Money fields may be strings (Prisma Decimal) - coerce with `toNumber()`.
+- Charts: manager screens (`(manager)/metrics|forecast|ai`) use Victory Native XL on native and a
+  plain-View fallback on web (`components/charts/*.tsx` + `*.native.tsx`). See `docs/CHARTING.md`.
+- Feedback: use `useFeedback()` from `providers/feedback-provider` for notifications and
+  confirmations; use `useErrorNotification` for post-refresh errors.
 
 ## Backend contract
 
