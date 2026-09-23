@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { Button, Card, Input, Screen } from '@/components/ui';
 import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
