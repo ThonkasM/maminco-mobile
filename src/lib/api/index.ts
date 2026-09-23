@@ -9,3 +9,5 @@ export * as ordersApi from './orders';
 export * as paymentsApi from './payments';
 export * as reportsApi from './reports';
 export * as forecastApi from './forecast';
+export * as aiApi from './ai';
+export * as systemApi from './system';

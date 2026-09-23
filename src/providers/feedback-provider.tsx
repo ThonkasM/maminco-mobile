@@ -95,7 +95,14 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
       {toast ? (
         <View
           pointerEvents="none"
-          style={[styles.toastOverlay, { top: insets.top + spacing.md }]}
+          style={[
+            styles.toastOverlay,
+            {
+              top: insets.top + spacing.md,
+              paddingLeft: spacing.lg + insets.left,
+              paddingRight: spacing.lg + insets.right,
+            },
+          ]}
         >
           <View
             style={[

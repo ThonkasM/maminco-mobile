@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
 
 import FloatingTabBar from '@/components/floating-tab-bar';
+import { useOrientationLock } from '@/hooks/use-orientation-lock';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -30,6 +31,9 @@ const TABS: { name: string; title: string; icon: IoniconName; sf: SfIcon }[] = [
 export default function PosLayout() {
   const { colors } = useTheme();
   const { status, user, isManager } = useAuth();
+
+  // Waiters may work with the device in landscape.
+  useOrientationLock(null);
 
   if (status === 'loading') return null;
   if (!user) return <Redirect href="/login" />;

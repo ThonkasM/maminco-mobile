@@ -2,6 +2,8 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Badge, EmptyState, Screen, Skeleton } from '@/components/ui';
 import {
   fontSize,
@@ -19,6 +21,7 @@ import { formatCurrency } from '@/lib/format';
 
 export default function PosTablesScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { tables, loading, connected, refresh } = useTablesRealtime();
   const { data: areas, loading: areasLoading } = useAsync(() => areasApi.getActiveAreas(), []);
@@ -41,7 +44,7 @@ export default function PosTablesScreen() {
   };
 
   return (
-    <Screen edges={['top']} padded={false}>
+    <Screen edges={['top', 'left', 'right']} padded={false}>
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <View>
@@ -88,6 +91,17 @@ export default function PosTablesScreen() {
             })}
           </ScrollView>
         ) : null}
+
+        <View style={styles.legend}>
+          {(['AVAILABLE', 'OCCUPIED', 'RESERVED'] as const).map((status) => (
+            <View key={status} style={styles.legendItem}>
+              <View style={[styles.dot, { backgroundColor: tableStatusColor(status, colors) }]} />
+              <Text style={[styles.legendText, { color: colors.muted }]}>
+                {tableStatusLabel(status)}
+              </Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       <View style={styles.body}>
@@ -107,7 +121,10 @@ export default function PosTablesScreen() {
             onAction={refresh}
           />
         ) : (
-          <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={[styles.grid, { paddingBottom: spacing.xxl + insets.bottom }]}
+            showsVerticalScrollIndicator={false}
+          >
             {visibleTables.map((table) => {
               const statusColor = tableStatusColor(table.status, colors);
               return (
@@ -142,17 +159,6 @@ export default function PosTablesScreen() {
             })}
           </ScrollView>
         )}
-      </View>
-
-      <View style={[styles.legend, { borderTopColor: colors.border }]}>
-        {(['AVAILABLE', 'OCCUPIED', 'RESERVED'] as const).map((status) => (
-          <View key={status} style={styles.legendItem}>
-            <View style={[styles.dot, { backgroundColor: tableStatusColor(status, colors) }]} />
-            <Text style={[styles.legendText, { color: colors.muted }]}>
-              {tableStatusLabel(status)}
-            </Text>
-          </View>
-        ))}
       </View>
     </Screen>
   );
@@ -236,8 +242,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.lg,
-    paddingVertical: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: spacing.xs,
   },
   legendItem: {
     flexDirection: 'row',

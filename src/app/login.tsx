@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { Button, Card, Input, Screen } from '@/components/ui';
 import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
@@ -39,9 +40,14 @@ export default function LoginScreen() {
   };
 
   return (
-    <Screen scroll edges={['top', 'bottom']} contentContainerStyle={styles.content}>
+    <Screen
+      scroll
+      edges={['top', 'bottom', 'left', 'right']}
+      contentContainerStyle={styles.content}
+    >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
         style={styles.flex}
       >
         <View style={styles.brand}>

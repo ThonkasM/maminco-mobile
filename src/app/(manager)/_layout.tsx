@@ -2,10 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Redirect } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { Platform } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
 
 import FloatingTabBar from '@/components/floating-tab-bar';
+import { useOrientationLock } from '@/hooks/use-orientation-lock';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -37,11 +39,26 @@ const TABS: { name: string; title: string; icon: IoniconName; sf: SfIcon }[] = [
     icon: 'restaurant-outline',
     sf: { default: 'tablecells', selected: 'tablecells.fill' },
   },
+  {
+    name: 'ai',
+    title: 'IA',
+    icon: 'sparkles-outline',
+    sf: 'brain',
+  },
+  {
+    name: 'settings',
+    title: 'Sistema',
+    icon: 'settings-outline',
+    sf: 'gearshape',
+  },
 ];
 
 export default function ManagerLayout() {
   const { colors } = useTheme();
   const { status, user, isManager } = useAuth();
+
+  // The manager experience stays in portrait.
+  useOrientationLock(ScreenOrientation.OrientationLock.PORTRAIT_UP);
 
   if (status === 'loading') return null;
   if (!user) return <Redirect href="/login" />;

@@ -27,7 +27,7 @@ export function Screen({
   children,
   scroll = false,
   padded = true,
-  edges = ['top'],
+  edges = ['top', 'left', 'right'],
   refreshing,
   onRefresh,
   style,

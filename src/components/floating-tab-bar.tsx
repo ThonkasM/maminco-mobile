@@ -62,7 +62,12 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
     <View
       style={[
         styles.wrapper,
-        { backgroundColor: colors.background, paddingBottom: insets.bottom || spacing.sm },
+        {
+          backgroundColor: colors.background,
+          paddingLeft: spacing.lg + insets.left,
+          paddingRight: spacing.lg + insets.right,
+          paddingBottom: insets.bottom || spacing.sm,
+        },
       ]}
     >
       <View

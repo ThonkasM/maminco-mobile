@@ -3,7 +3,7 @@
     "name": "Maminco",
     "slug": "maminco",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "scheme": "maminco",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
