@@ -1,60 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Redirect } from 'expo-router';
-import { Tabs } from 'expo-router/js-tabs';
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Redirect, Stack } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { Platform } from 'react-native';
-import type { SFSymbol } from 'sf-symbols-typescript';
+import React from 'react';
 
-import FloatingTabBar from '@/components/floating-tab-bar';
 import { useOrientationLock } from '@/hooks/use-orientation-lock';
-import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/auth-provider';
 
-type IoniconName = keyof typeof Ionicons.glyphMap;
-type SfIcon = SFSymbol | { default?: SFSymbol; selected: SFSymbol };
-
-const TABS: { name: string; title: string; icon: IoniconName; sf: SfIcon }[] = [
-  {
-    name: 'index',
-    title: 'Panel',
-    icon: 'grid-outline',
-    sf: { default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' },
-  },
-  {
-    name: 'metrics',
-    title: 'Métricas',
-    icon: 'stats-chart-outline',
-    sf: { default: 'chart.bar', selected: 'chart.bar.fill' },
-  },
-  {
-    name: 'forecast',
-    title: 'Pronóstico',
-    icon: 'trending-up-outline',
-    sf: 'chart.line.uptrend.xyaxis',
-  },
-  {
-    name: 'tables',
-    title: 'Mesas',
-    icon: 'restaurant-outline',
-    sf: { default: 'tablecells', selected: 'tablecells.fill' },
-  },
-  {
-    name: 'ai',
-    title: 'IA',
-    icon: 'sparkles-outline',
-    sf: 'brain',
-  },
-  {
-    name: 'settings',
-    title: 'Sistema',
-    icon: 'settings-outline',
-    sf: 'gearshape',
-  },
-];
-
 export default function ManagerLayout() {
-  const { colors } = useTheme();
   const { status, user, isManager } = useAuth();
 
   // The manager experience stays in portrait.
@@ -64,36 +15,15 @@ export default function ManagerLayout() {
   if (!user) return <Redirect href="/login" />;
   if (!isManager) return <Redirect href="/(pos)/tables" />;
 
-  if (Platform.OS === 'ios') {
-    return (
-      <NativeTabs tintColor={colors.primary}>
-        {TABS.map((tab) => (
-          <NativeTabs.Trigger key={tab.name} name={tab.name}>
-            <NativeTabs.Trigger.Label>{tab.title}</NativeTabs.Trigger.Label>
-            <NativeTabs.Trigger.Icon sf={tab.sf} />
-          </NativeTabs.Trigger>
-        ))}
-      </NativeTabs>
-    );
-  }
-
+  // The analysis screens (metrics/forecast/ai/settings) are pushed above the
+  // tabs, so the tab bar is not visible while they are open.
   return (
-    <Tabs
-      tabBar={(props) => <FloatingTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      {TABS.map((tab) => (
-        <Tabs.Screen
-          key={tab.name}
-          name={tab.name}
-          options={{
-            title: tab.title,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name={tab.icon} size={size} color={color} />
-            ),
-          }}
-        />
-      ))}
-    </Tabs>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="metrics" />
+      <Stack.Screen name="forecast" />
+      <Stack.Screen name="ai" />
+      <Stack.Screen name="settings" />
+    </Stack>
   );
 }

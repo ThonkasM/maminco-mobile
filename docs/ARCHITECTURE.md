@@ -37,18 +37,23 @@ flowchart TD
   Auth -->|CASHIER / WAITER| PosGroup
 
   subgraph Manager["Manager experience"]
-    ManagerGroup --> MDash[Dashboard<br/>/api/reports/today]
-    ManagerGroup --> MMetrics[Metrics<br/>/api/reports/today/top-products]
-    ManagerGroup --> MForecast[Forecast<br/>/api/ai/forecast/sales]
-    ManagerGroup --> MTables[Tables<br/>socket snapshot]
+    ManagerGroup --> MTabs["(tabs)<br/>Panel / Mesas / Perfil"]
+    MTabs --> MDash[Dashboard<br/>/api/reports/today]
+    MTabs --> MTables[Tables<br/>socket snapshot]
+    MTabs --> MProfile[Profile<br/>logout + settings]
+    ManagerGroup --> MMetrics[Metrics<br/>pushed above tabs]
+    ManagerGroup --> MForecast[Forecast<br/>pushed above tabs]
+    ManagerGroup --> MAi[AI<br/>pushed above tabs]
+    ManagerGroup --> MSettings[Settings<br/>pushed above tabs]
   end
 
   subgraph POS["POS experience"]
-    PosGroup --> PTables[Tables<br/>areas + grid]
-    PTables -->|tap table| POrder[Order<br/>/(pos)/tables/orders/:tableId]
-    POrder -->|Cobrar| PPay[Payment<br/>/(pos)/tables/payments/:tableId]
+    PosGroup --> PTabs["(tabs)<br/>Mesas / Perfil"]
+    PTabs --> PTables[Tables<br/>areas + 3-col grid]
+    PTables -->|tap table| POrder[Order<br/>/(pos)/orders/:tableId]
+    POrder -->|Cobrar (CASHIER+)| PPay[Payment<br/>/(pos)/payments/:tableId]
     PPay -->|Pago completado| PTables
-    PosGroup --> PProfile[Profile<br/>logout]
+    PTabs --> PProfile[Profile<br/>logout]
   end
 ```
 

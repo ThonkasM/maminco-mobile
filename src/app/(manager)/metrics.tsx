@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { BackButton } from '@/components/back-button';
 import { BarChart, type BarDatum } from '@/components/bar-chart';
 import { KpiTile } from '@/components/kpi-tile';
 import { Card, EmptyState, Screen, Skeleton } from '@/components/ui';
@@ -27,6 +28,7 @@ export default function ManagerMetricsScreen() {
 
   return (
     <Screen scroll refreshing={refreshing} onRefresh={refresh}>
+      <BackButton />
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Métricas</Text>
         <Text style={[styles.subtitle, { color: colors.muted }]}>

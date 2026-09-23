@@ -28,7 +28,14 @@ npm run lint       # expo lint
 - Routing is file-based under `src/app`. `(manager)` and `(pos)` are route groups
   (not part of the URL). `/tables` is intentionally a shared route between them.
 - Always navigate within a group using a group-qualified href, e.g.
-  `router.push('/(pos)/tables/orders/<tableId>')`, so the correct layout is kept.
+  `router.push('/(pos)/orders/<tableId>')`, so the correct layout is kept.
+- Both role layouts are a **Stack whose first screen is the `(tabs)` group**, so
+  detail screens push **above** the tabs and the tab bar is not shown there:
+  - `(manager)`: tabs **Panel / Mesas / Perfil**; `metrics`, `forecast`, `ai`,
+    `settings` are siblings of `(tabs)` (`router.push('/(manager)/metrics')`),
+    reached from the dashboard and the profile tab.
+  - `(pos)`: tabs **Mesas / Perfil**; `orders/[tableId]` and `payments/[tableId]`
+    are siblings of `(tabs)` (`router.push('/(pos)/orders/<tableId>')`).
 - Style with `StyleSheet` + semantic tokens from `useTheme()`; never hardcode hex
   values in screens. Tokens and rules live in `docs/DESIGN.md`.
 - API access goes through `src/lib/api/*`; never call `fetch` directly.

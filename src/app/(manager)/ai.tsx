@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { BackButton } from '@/components/back-button';
 import { PeakHoursChart } from '@/components/charts/peak-hours-chart';
 import { SalesForecastChart } from '@/components/charts/sales-forecast-chart';
 import type { PeakHourPoint, SalesForecastPoint } from '@/components/charts/types';
@@ -115,6 +116,7 @@ export default function ManagerAiScreen() {
 
   return (
     <Screen scroll refreshing={refreshing} onRefresh={refresh}>
+      <BackButton />
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={[styles.title, { color: colors.text }]}>Inteligencia artificial</Text>

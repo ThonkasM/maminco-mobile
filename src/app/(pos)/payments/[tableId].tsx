@@ -11,6 +11,13 @@ import { ordersApi, paymentsApi } from '@/lib/api';
 import type { Order, PaymentProcessResult } from '@/lib/api/types';
 import { formatCurrency, getErrorMessage, toNumber } from '@/lib/format';
 import { useFeedback } from '@/providers/feedback-provider';
+import { useAuth } from '@/providers/auth-provider';
+import {
+  getOrdersSocket,
+  joinTable,
+  leaveTable,
+  type OrderStatusChangedEvent,
+} from '@/lib/realtime/socket';
 
 function methodIcon(code: string): keyof typeof Ionicons.glyphMap {
   const normalized = code.toUpperCase();
@@ -24,6 +31,7 @@ export default function PosPaymentScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { notify } = useFeedback();
+  const { session } = useAuth();
   const params = useLocalSearchParams<{ tableId: string }>();
   const tableId = typeof params.tableId === 'string' ? params.tableId : params.tableId?.[0];
 
@@ -60,6 +68,24 @@ export default function PosPaymentScreen() {
       active = false;
     };
   }, [tableId]);
+
+  // If another user closes/cancels the order while charging, leave the screen.
+  useEffect(() => {
+    if (!session?.token || !tableId) return;
+    const socket = getOrdersSocket(session.token);
+    joinTable(socket, tableId);
+    const onStatus = (event: OrderStatusChangedEvent) => {
+      if (event.newStatus === 'CLOSED' || event.newStatus === 'CANCELLED') {
+        notify('info', 'La orden fue cerrada por otro usuario');
+        router.replace('/(pos)/tables');
+      }
+    };
+    socket.on('order:status:changed', onStatus);
+    return () => {
+      socket.off('order:status:changed', onStatus);
+      leaveTable(socket, tableId);
+    };
+  }, [session?.token, tableId, notify, router]);
 
   useEffect(() => {
     if (!methodId && methods && methods.length > 0) setMethodId(methods[0].id);
@@ -152,9 +178,11 @@ export default function PosPaymentScreen() {
         </Pressable>
         <View style={styles.headerText}>
           <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-            {order.tableName}
+            {`Mesa ${order.tableName}`}
           </Text>
-          <Text style={[styles.subtitle, { color: colors.muted }]}>Orden {order.orderNumber}</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>
+            {order.serviceType} · Orden {order.orderNumber}
+          </Text>
         </View>
       </View>
 

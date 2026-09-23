@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { BackButton } from '@/components/back-button';
 import { BarChart, type BarDatum } from '@/components/bar-chart';
 import { Card, EmptyState, Screen, Skeleton } from '@/components/ui';
 import { fontSize, fontWeight, spacing } from '@/constants/theme';
@@ -55,6 +56,7 @@ export default function ManagerForecastScreen() {
 
   return (
     <Screen scroll refreshing={state === 'loading'} onRefresh={load}>
+      <BackButton />
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Pronóstico</Text>
         <Text style={[styles.subtitle, { color: colors.muted }]}>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { BackButton } from '@/components/back-button';
 import { Badge, Card, EmptyState, Screen, Skeleton } from '@/components/ui';
 import type { BadgeTone } from '@/components/ui';
 import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
@@ -109,6 +110,7 @@ export default function ManagerSettingsScreen() {
 
   return (
     <Screen scroll refreshing={refreshing} onRefresh={refresh}>
+      <BackButton />
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Sistema</Text>
         <Text style={[styles.subtitle, { color: colors.muted }]}>

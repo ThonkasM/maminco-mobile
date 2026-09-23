@@ -1,17 +1,43 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { KpiTile } from '@/components/kpi-tile';
 import { Card, EmptyState, Screen, Skeleton } from '@/components/ui';
-import { fontSize, fontWeight, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAsync } from '@/hooks/use-async';
 import { useErrorNotification } from '@/hooks/use-error-notification';
 import { reportsApi } from '@/lib/api';
 import { formatCurrency, formatNumber } from '@/lib/format';
 
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+const ANALYTICS: { href: string; title: string; subtitle: string; icon: IoniconName }[] = [
+  {
+    href: '/(manager)/metrics',
+    title: 'Métricas',
+    subtitle: 'Ingresos y unidades por producto',
+    icon: 'stats-chart-outline',
+  },
+  {
+    href: '/(manager)/forecast',
+    title: 'Pronóstico',
+    subtitle: 'Proyección de ventas a 7 días',
+    icon: 'trending-up-outline',
+  },
+  {
+    href: '/(manager)/ai',
+    title: 'Inteligencia artificial',
+    subtitle: 'Modelo, demanda y anomalías',
+    icon: 'sparkles-outline',
+  },
+];
+
 export default function ManagerDashboardScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const { data, error, loading, refreshing, refresh } = useAsync(
     () => reportsApi.getDailyReport(5),
     [],
@@ -74,6 +100,28 @@ export default function ManagerDashboardScreen() {
               tone="info"
             />
           </View>
+
+          <Card title="Análisis" subtitle="Reportes y predicciones" style={styles.section}>
+            {ANALYTICS.map((item) => (
+              <Pressable
+                key={item.href}
+                onPress={() => router.push(item.href)}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.navRow, { opacity: pressed ? 0.8 : 1 }]}
+              >
+                <View style={[styles.navIcon, { backgroundColor: colors.surfaceAlt }]}>
+                  <Ionicons name={item.icon} size={20} color={colors.primary} />
+                </View>
+                <View style={styles.navText}>
+                  <Text style={[styles.navTitle, { color: colors.text }]}>{item.title}</Text>
+                  <Text style={[styles.navSubtitle, { color: colors.muted }]}>
+                    {item.subtitle}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+              </Pressable>
+            ))}
+          </Card>
 
           <Card title="Detalle" subtitle="Descuentos y tipo de servicio" style={styles.section}>
             <View style={styles.detailRow}>
@@ -144,6 +192,30 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: spacing.lg,
+  },
+  navRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  navIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navText: {
+    flex: 1,
+    gap: 2,
+  },
+  navTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+  },
+  navSubtitle: {
+    fontSize: fontSize.xs,
   },
   detailRow: {
     flexDirection: 'row',

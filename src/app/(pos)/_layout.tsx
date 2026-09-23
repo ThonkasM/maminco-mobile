@@ -1,35 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Redirect } from 'expo-router';
-import { Tabs } from 'expo-router/js-tabs';
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { Platform } from 'react-native';
-import type { SFSymbol } from 'sf-symbols-typescript';
+import { Redirect, Stack } from 'expo-router';
+import React from 'react';
 
-import FloatingTabBar from '@/components/floating-tab-bar';
 import { useOrientationLock } from '@/hooks/use-orientation-lock';
-import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/auth-provider';
 
-type IoniconName = keyof typeof Ionicons.glyphMap;
-type SfIcon = SFSymbol | { default?: SFSymbol; selected: SFSymbol };
-
-const TABS: { name: string; title: string; icon: IoniconName; sf: SfIcon }[] = [
-  {
-    name: 'tables',
-    title: 'Mesas',
-    icon: 'grid-outline',
-    sf: { default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' },
-  },
-  {
-    name: 'profile',
-    title: 'Perfil',
-    icon: 'person-outline',
-    sf: { default: 'person', selected: 'person.fill' },
-  },
-];
-
 export default function PosLayout() {
-  const { colors } = useTheme();
   const { status, user, isManager } = useAuth();
 
   // Waiters may work with the device in landscape.
@@ -39,36 +14,13 @@ export default function PosLayout() {
   if (!user) return <Redirect href="/login" />;
   if (isManager) return <Redirect href="/(manager)" />;
 
-  if (Platform.OS === 'ios') {
-    return (
-      <NativeTabs tintColor={colors.primary}>
-        {TABS.map((tab) => (
-          <NativeTabs.Trigger key={tab.name} name={tab.name}>
-            <NativeTabs.Trigger.Label>{tab.title}</NativeTabs.Trigger.Label>
-            <NativeTabs.Trigger.Icon sf={tab.sf} />
-          </NativeTabs.Trigger>
-        ))}
-      </NativeTabs>
-    );
-  }
-
+  // Order/payment screens are pushed above the tabs, so the tab bar is hidden
+  // while a table's detail is open.
   return (
-    <Tabs
-      tabBar={(props) => <FloatingTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      {TABS.map((tab) => (
-        <Tabs.Screen
-          key={tab.name}
-          name={tab.name}
-          options={{
-            title: tab.title,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name={tab.icon} size={size} color={color} />
-            ),
-          }}
-        />
-      ))}
-    </Tabs>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="orders/[tableId]" />
+      <Stack.Screen name="payments/[tableId]" />
+    </Stack>
   );
 }
