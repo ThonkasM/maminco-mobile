@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -77,6 +77,20 @@ export default function PosTablesScreen() {
       setRefreshing(false);
     }
   }, [refresh, refreshAreas]);
+
+  // Refresh areas/tables when returning to the tab (e.g. after an order), so a
+  // table or area created meanwhile shows up. The first focus is skipped.
+  const hasFocusedRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocusedRef.current) {
+        hasFocusedRef.current = true;
+        return;
+      }
+      void refresh();
+      void refreshAreas();
+    }, [refresh, refreshAreas]),
+  );
 
   const openOrder = (tableId: string) => {
     router.push(`/(pos)/orders/${tableId}`);

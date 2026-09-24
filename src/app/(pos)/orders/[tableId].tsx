@@ -17,7 +17,7 @@ import { Badge, Button, Card, EmptyState, Input, Screen, Skeleton } from '@/comp
 import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useAsync } from '@/hooks/use-async';
 import { useTheme } from '@/hooks/use-theme';
-import { categoriesApi, ordersApi, productsApi } from '@/lib/api';
+import { categoriesApi, featuresApi, ordersApi, productsApi } from '@/lib/api';
 import type { Order, OrderStatus, Product } from '@/lib/api/types';
 import { formatCurrency, getErrorMessage, orderStatusLabel } from '@/lib/format';
 import {
@@ -57,6 +57,12 @@ export default function PosOrderScreen() {
     refreshing: productsRefreshing,
     refresh: refreshProducts,
   } = useAsync(() => productsApi.getAvailableProducts(), []);
+  const { data: featureFlags, refresh: refreshFeatures } = useAsync(
+    () => featuresApi.evaluateFeatures(),
+    [],
+  );
+  const canRemoveProducts =
+    featureFlags?.waiter_can_remove_products ?? true;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [orderLoading, setOrderLoading] = useState(true);
@@ -102,11 +108,16 @@ export default function PosOrderScreen() {
   const handleRefresh = useCallback(async () => {
     setOrderRefreshing(true);
     try {
-      await Promise.all([refreshCategories(), refreshProducts(), reloadOrder()]);
+      await Promise.all([
+        refreshCategories(),
+        refreshProducts(),
+        refreshFeatures(),
+        reloadOrder(),
+      ]);
     } finally {
       setOrderRefreshing(false);
     }
-  }, [refreshCategories, refreshProducts, reloadOrder]);
+  }, [refreshCategories, refreshProducts, refreshFeatures, reloadOrder]);
 
   const refreshing = categoriesRefreshing || productsRefreshing || orderRefreshing;
 
@@ -122,8 +133,9 @@ export default function PosOrderScreen() {
       }
       void refreshCategories();
       void refreshProducts();
+      void refreshFeatures();
       void reloadOrder();
-    }, [refreshCategories, refreshProducts, reloadOrder]),
+    }, [refreshCategories, refreshProducts, refreshFeatures, reloadOrder]),
   );
 
   // Live updates for the table's active order.
@@ -463,23 +475,31 @@ export default function PosOrderScreen() {
                     {formatCurrency(item.subtotal)}
                   </Text>
                   <View style={styles.stepper}>
-                    <Pressable
-                      onPress={() => changeItemQuantity(item.id, item.quantity - 1)}
-                      hitSlop={8}
-                      style={[styles.stepBtn, { borderColor: colors.border }]}
-                      disabled={submitting}
-                    >
-                      <Ionicons name="remove" size={16} color={colors.text} />
-                    </Pressable>
-                    <Text style={[styles.stepValue, { color: colors.text }]}>{item.quantity}</Text>
-                    <Pressable
-                      onPress={() => changeItemQuantity(item.id, item.quantity + 1)}
-                      hitSlop={8}
-                      style={[styles.stepBtn, { borderColor: colors.border }]}
-                      disabled={submitting}
-                    >
-                      <Ionicons name="add" size={16} color={colors.text} />
-                    </Pressable>
+                    {canRemoveProducts ? (
+                      <>
+                        <Pressable
+                          onPress={() => changeItemQuantity(item.id, item.quantity - 1)}
+                          hitSlop={8}
+                          style={[styles.stepBtn, { borderColor: colors.border }]}
+                          disabled={submitting}
+                        >
+                          <Ionicons name="remove" size={16} color={colors.text} />
+                        </Pressable>
+                        <Text style={[styles.stepValue, { color: colors.text }]}>{item.quantity}</Text>
+                        <Pressable
+                          onPress={() => changeItemQuantity(item.id, item.quantity + 1)}
+                          hitSlop={8}
+                          style={[styles.stepBtn, { borderColor: colors.border }]}
+                          disabled={submitting}
+                        >
+                          <Ionicons name="add" size={16} color={colors.text} />
+                        </Pressable>
+                      </>
+                    ) : (
+                      <Text style={[styles.stepValue, { color: colors.muted }]}>
+                        {item.quantity}×
+                      </Text>
+                    )}
                   </View>
                 </View>
               </View>
