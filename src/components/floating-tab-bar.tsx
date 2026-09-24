@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.xl - BAR_PADDING,
   },
   label: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     fontWeight: fontWeight.bold,
   },
 });
