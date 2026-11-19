@@ -12,6 +12,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { OfflineBanner } from '@/components/offline-banner';
+import { NotificationsProvider } from '@/features/notifications/notifications-provider';
 import { useTheme } from '@/hooks/use-theme';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 import { FeedbackProvider } from '@/providers/feedback-provider';
@@ -27,7 +28,9 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <AuthProvider>
             <FeedbackProvider>
-              <RootNavigator fontsLoaded={fontsLoaded} />
+              <NotificationsProvider>
+                <RootNavigator fontsLoaded={fontsLoaded} />
+              </NotificationsProvider>
             </FeedbackProvider>
           </AuthProvider>
         </SafeAreaProvider>

@@ -110,7 +110,14 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
                 { width: tabWidth, opacity: pressed ? 0.7 : isActive ? 1 : 0.65 },
               ]}
             >
-              {icon ?? <Ionicons name="ellipse-outline" size={22} color={color} />}
+              <View>
+                {icon ?? <Ionicons name="ellipse-outline" size={22} color={color} />}
+                {options?.tabBarBadge ? (
+                  <View style={[styles.badge, { backgroundColor: colors.danger }]}>
+                    <Text style={styles.badgeText}>{options.tabBarBadge}</Text>
+                  </View>
+                ) : null}
+              </View>
               {isActive ? (
                 <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(100)}>
                   <Text style={[styles.label, { color }]} numberOfLines={1}>
@@ -166,6 +173,22 @@ const styles = StyleSheet.create({
     height: TAB_HEIGHT,
     gap: spacing.xs / 2,
     borderRadius: radii.xl - BAR_PADDING,
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -10,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: palette.white,
+    fontSize: fontSize.xxs,
+    fontWeight: fontWeight.bold,
   },
   label: {
     fontSize: fontSize.sm,

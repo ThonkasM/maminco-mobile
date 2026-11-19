@@ -5,6 +5,8 @@ import { Platform } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
 
 import FloatingTabBar from '@/components/floating-tab-bar';
+import { useNotifications } from '@/features/notifications/notifications-provider';
+import { formatBadgeCount } from '@/features/notifications/selectors';
 import { useTheme } from '@/hooks/use-theme';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -18,6 +20,12 @@ const TABS: { name: string; title: string; icon: IoniconName; sf: SfIcon }[] = [
     sf: { default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' },
   },
   {
+    name: 'notifications',
+    title: 'Avisos',
+    icon: 'notifications-outline',
+    sf: { default: 'bell', selected: 'bell.fill' },
+  },
+  {
     name: 'profile',
     title: 'Perfil',
     icon: 'person-outline',
@@ -27,6 +35,8 @@ const TABS: { name: string; title: string; icon: IoniconName; sf: SfIcon }[] = [
 
 export default function PosTabsLayout() {
   const { colors } = useTheme();
+  const { unread } = useNotifications();
+  const badge = formatBadgeCount(unread);
 
   if (Platform.OS === 'ios') {
     return (
@@ -35,6 +45,9 @@ export default function PosTabsLayout() {
           <NativeTabs.Trigger key={tab.name} name={tab.name}>
             <NativeTabs.Trigger.Label>{tab.title}</NativeTabs.Trigger.Label>
             <NativeTabs.Trigger.Icon sf={tab.sf} />
+            {tab.name === 'notifications' ? (
+              <NativeTabs.Trigger.Badge hidden={!badge}>{badge}</NativeTabs.Trigger.Badge>
+            ) : null}
           </NativeTabs.Trigger>
         ))}
       </NativeTabs>
@@ -52,6 +65,7 @@ export default function PosTabsLayout() {
           name={tab.name}
           options={{
             title: tab.title,
+            tabBarBadge: tab.name === 'notifications' ? badge : undefined,
             tabBarIcon: ({ color, size }) => (
               <Ionicons name={tab.icon} size={size} color={color} />
             ),

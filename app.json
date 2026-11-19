@@ -37,6 +37,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-dev-client",
       [
         "expo-splash-screen",
         {
@@ -61,7 +62,21 @@
         }
       ],
       "./plugins/with-ios-signing",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/monochrome-icon.png",
+          "color": "#0a5c33"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "86c144d2-1188-491e-95df-43496fa0b854"
+      },
+      "router": {}
+    },
+    "owner": "thonkasm"
   }
 }

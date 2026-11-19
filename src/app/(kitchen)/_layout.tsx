@@ -19,6 +19,7 @@ export default function KitchenLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="kitchen" />
+      <Stack.Screen name="notifications" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

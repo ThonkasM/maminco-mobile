@@ -11,3 +11,4 @@ export * as reportsApi from './reports';
 export * as featuresApi from './features';
 export * as aiApi from './ai';
 export * as systemApi from './system';
+export * as notificationsApi from './notifications';

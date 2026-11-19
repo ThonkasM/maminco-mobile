@@ -1,7 +1,9 @@
+import { existsSync } from 'node:fs';
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 const appEnv = process.env.APP_ENV ?? process.env.EAS_BUILD_PROFILE ?? 'development';
 const isProduction = appEnv === 'production';
+const googleServicesFile = process.env.GOOGLE_SERVICES_JSON ?? './google-services.json';
 
 function assertHttps(url: string | undefined): void {
   if (!url) {
@@ -45,7 +47,18 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         NSAppTransportSecurity: { NSAllowsArbitraryLoads: !isProduction },
       },
     },
+    android: {
+      ...config.android,
+      ...(existsSync(googleServicesFile) ? { googleServicesFile } : {}),
+    },
     plugins: plugins as ExpoConfig['plugins'],
-    extra: { ...config.extra, appEnv },
+    extra: {
+      ...config.extra,
+      appEnv,
+      eas: {
+        ...config.extra?.eas,
+        projectId: config.extra?.eas?.projectId || process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+      },
+    },
   };
 };

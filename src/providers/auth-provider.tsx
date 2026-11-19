@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { authApi, setAuthToken, setUnauthorizedHandler, MANAGER_ROLES } from '@/lib/api';
+import { unregisterFromPush } from '@/lib/notifications/push';
 import { disconnectOrdersSocket } from '@/lib/realtime/socket';
 import type { User, UserRole } from '@/lib/api/types';
 import { clearSession, loadSession, saveSession } from '@/lib/storage/session-storage';
@@ -33,6 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
 
   const signOut = useCallback(async () => {
+    await Promise.race([
+      unregisterFromPush(),
+      new Promise<void>((resolve) => setTimeout(resolve, 3000)),
+    ]);
     setAuthToken(null);
     disconnectOrdersSocket();
     setSession(null);

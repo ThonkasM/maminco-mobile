@@ -45,3 +45,6 @@ yarn-error.*
 
 # test coverage
 coverage/
+
+# Firebase client config (se sube a EAS como archivo secreto)
+google-services.json

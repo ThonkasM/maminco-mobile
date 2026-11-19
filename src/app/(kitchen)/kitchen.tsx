@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { KitchenOrderCard } from '@/components/kitchen-order-card';
+import { NotificationsBell } from '@/features/notifications/notifications-bell';
 import { Badge, EmptyState, Screen } from '@/components/ui';
 import { dotSize, fonts, fontSize, fontWeight, spacing, type ThemeColors } from '@/constants/theme';
 import { useAsync } from '@/hooks/use-async';
@@ -231,7 +232,10 @@ export default function KitchenScreen() {
               {data.orders.length === 1 ? '' : 's'}
             </Text>
           </View>
-          <Badge label="En vivo" tone="info" />
+          <View style={styles.headerActions}>
+            <Badge label="En vivo" tone="info" />
+            <NotificationsBell />
+          </View>
         </View>
       </View>
 
@@ -284,6 +288,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   title: {
     fontSize: fontSize.xxl,
