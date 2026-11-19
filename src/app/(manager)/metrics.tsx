@@ -5,7 +5,7 @@ import { BackButton } from '@/components/back-button';
 import { BarChart, type BarDatum } from '@/components/bar-chart';
 import { KpiTile } from '@/components/kpi-tile';
 import { Card, EmptyState, Screen, Skeleton } from '@/components/ui';
-import { fontSize, fontWeight, spacing } from '@/constants/theme';
+import { fonts, fontSize, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAsync } from '@/hooks/use-async';
 import { useErrorNotification } from '@/hooks/use-error-notification';
@@ -100,7 +100,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fonts.display,
+    fontWeight: 'normal',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: fontSize.sm,

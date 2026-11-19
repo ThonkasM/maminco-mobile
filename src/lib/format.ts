@@ -11,6 +11,15 @@ export function toNumber(value: number | string | null | undefined, fallback = 0
   return fallback;
 }
 
+/** Rounds to 2 decimals (half-up). Use before sending money to the API. */
+export function roundMoney(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+export function parseMoney(value: number | string | null | undefined): number {
+  return roundMoney(toNumber(value));
+}
+
 export function formatCurrency(value: number | string | null | undefined): string {
   return `Bs ${toNumber(value).toFixed(2)}`;
 }

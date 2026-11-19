@@ -1,23 +1,14 @@
+import { paymentMethodLabel } from '@/lib/payment-method';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button, Card, EmptyState, Input, Screen, Skeleton } from '@/components/ui';
 import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useAsync } from '@/hooks/use-async';
-import { ordersApi, paymentsApi } from '@/lib/api';
-import type { Order, PaymentProcessResult } from '@/lib/api/types';
-import { formatCurrency, getErrorMessage, toNumber } from '@/lib/format';
-import { useFeedback } from '@/providers/feedback-provider';
-import { useAuth } from '@/providers/auth-provider';
-import {
-  getOrdersSocket,
-  joinTable,
-  leaveTable,
-  type OrderStatusChangedEvent,
-} from '@/lib/realtime/socket';
+import { usePayment } from '@/features/payments/hooks/use-payment';
+import { formatCurrency } from '@/lib/format';
 
 function methodIcon(code: string): keyof typeof Ionicons.glyphMap {
   const normalized = code.toUpperCase();
@@ -30,111 +21,28 @@ function methodIcon(code: string): keyof typeof Ionicons.glyphMap {
 export default function PosPaymentScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { notify } = useFeedback();
-  const { session } = useAuth();
   const params = useLocalSearchParams<{ tableId: string }>();
   const tableId = typeof params.tableId === 'string' ? params.tableId : params.tableId?.[0];
 
-  const { data: methods, loading: methodsLoading } = useAsync(
-    () => paymentsApi.getPaymentMethods(),
-    [],
-  );
+  const {
+    methods,
+    selectedMethod,
+    methodId,
+    setMethodId,
+    amount,
+    setAmount,
+    order,
+    total,
+    loading,
+    submitting,
+    error,
+    result,
+    isCompleted,
+    needsTipConfirmation,
+    process,
+  } = usePayment(tableId);
 
-  const [order, setOrder] = useState<Order | null>(null);
-  const [orderLoading, setOrderLoading] = useState(true);
-  const [methodId, setMethodId] = useState<string | null>(null);
-  const [amount, setAmount] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<PaymentProcessResult | null>(null);
-
-  const total = toNumber(order?.total);
-
-  useEffect(() => {
-    if (!tableId) return;
-    let active = true;
-    setOrderLoading(true);
-    void (async () => {
-      try {
-        const activeOrder = await ordersApi.getActiveOrderByTable(tableId);
-        if (active) setOrder(activeOrder);
-      } catch (err) {
-        if (active) setError(getErrorMessage(err));
-      } finally {
-        if (active) setOrderLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [tableId]);
-
-  // If another user closes/cancels the order while charging, leave the screen.
-  useEffect(() => {
-    if (!session?.token || !tableId) return;
-    const socket = getOrdersSocket(session.token);
-    joinTable(socket, tableId);
-    const onStatus = (event: OrderStatusChangedEvent) => {
-      if (event.newStatus === 'CLOSED' || event.newStatus === 'CANCELLED') {
-        notify('info', 'La orden fue cerrada por otro usuario');
-        router.replace('/(pos)/tables');
-      }
-    };
-    socket.on('order:status:changed', onStatus);
-    return () => {
-      socket.off('order:status:changed', onStatus);
-      leaveTable(socket, tableId);
-    };
-  }, [session?.token, tableId, notify, router]);
-
-  useEffect(() => {
-    if (!methodId && methods && methods.length > 0) setMethodId(methods[0].id);
-  }, [methods, methodId]);
-
-  useEffect(() => {
-    if (order && !amount) setAmount(total > 0 ? total.toFixed(2) : '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order?.id]);
-
-  const selectedMethod = useMemo(
-    () => (methods ?? []).find((method) => method.id === methodId) ?? null,
-    [methods, methodId],
-  );
-
-  const process = useCallback(
-    async (isExtraTip?: boolean) => {
-      if (!order || !methodId) return;
-      const amountReceived = Number(amount);
-      if (!Number.isFinite(amountReceived) || amountReceived <= 0) {
-        notify('error', 'Ingresa un monto válido.');
-        return;
-      }
-      setSubmitting(true);
-      try {
-        const response = await paymentsApi.processPayment(order.id, {
-          paymentMethodId: methodId,
-          amountReceived,
-          ...(isExtraTip ? { isExtraTip: true } : {}),
-        });
-        setResult(response);
-        if (response.status === 'ERROR') {
-          notify('error', response.message);
-        } else if (response.status === 'COMPLETED') {
-          notify('success', 'Pago completado');
-        }
-      } catch (err) {
-        notify('error', getErrorMessage(err));
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [order, methodId, amount, notify],
-  );
-
-  const isCompleted = result?.status === 'COMPLETED';
-  const needsTipConfirmation = result?.status === 'PENDING_CONFIRMATION';
-
-  if (orderLoading || methodsLoading) {
+  if (loading) {
     return (
       <Screen>
         <Skeleton height={140} />
@@ -291,7 +199,7 @@ export default function PosPaymentScreen() {
                     style={[styles.methodText, { color: active ? colors.onPrimary : colors.text }]}
                     numberOfLines={1}
                   >
-                    {method.name}
+                    {paymentMethodLabel(method.code, method.name)}
                   </Text>
                 </Pressable>
               );
@@ -308,6 +216,7 @@ export default function PosPaymentScreen() {
               hint={`Total: ${formatCurrency(total)}`}
             />
             <Button
+              variant="brand"
               title={`Cobrar ${selectedMethod ? `con ${selectedMethod.name}` : ''}`.trim()}
               icon="checkmark-circle-outline"
               fullWidth

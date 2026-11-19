@@ -30,7 +30,7 @@ export default function PosTabsLayout() {
 
   if (Platform.OS === 'ios') {
     return (
-      <NativeTabs tintColor={colors.primary}>
+      <NativeTabs tintColor={colors.menuGreen}>
         {TABS.map((tab) => (
           <NativeTabs.Trigger key={tab.name} name={tab.name}>
             <NativeTabs.Trigger.Label>{tab.title}</NativeTabs.Trigger.Label>

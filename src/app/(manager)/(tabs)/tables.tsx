@@ -1,14 +1,60 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Card, EmptyState, Screen, Skeleton } from '@/components/ui';
-import { fontSize, fontWeight, radii, spacing, tableStatusColor } from '@/constants/theme';
+import {
+  fonts,
+  fontSize,
+  fontWeight,
+  radii,
+  spacing,
+  tableStatusColor,
+  tableStatusLabel,
+  type ThemeColors,
+} from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { countByStatus, useTablesRealtime } from '@/hooks/use-tables-realtime';
 import { useErrorNotification } from '@/hooks/use-error-notification';
 import type { TableStatus } from '@/lib/api/types';
+import type { TableSnapshotItem } from '@/lib/realtime/socket';
 
 const STATUS_ORDER: TableStatus[] = ['AVAILABLE', 'OCCUPIED', 'RESERVED'];
+
+type AreaGroup = [areaName: string, tables: TableSnapshotItem[]];
+
+const areaKey = ([areaName]: AreaGroup) => areaName;
+
+const AreaCard = React.memo(function AreaCard({
+  areaName,
+  tables,
+  colors,
+}: {
+  areaName: string;
+  tables: TableSnapshotItem[];
+  colors: ThemeColors;
+}) {
+  return (
+    <Card title={areaName} subtitle={`${tables.length} mesas`} style={styles.section}>
+      <View style={styles.chips}>
+        {tables.map((table) => (
+          <View
+            key={table.id}
+            accessible
+            accessibilityLabel={`Mesa ${table.number}, ${tableStatusLabel(table.status)}, ${
+              table.itemCount ? `${table.itemCount} ítems` : 'sin pedido'
+            }`}
+            style={[styles.chip, { borderColor: tableStatusColor(table.status, colors) }]}
+          >
+            <Text style={[styles.chipNumber, { color: colors.text }]}>{table.number}</Text>
+            <Text style={[styles.chipMeta, { color: colors.muted }]}>
+              {table.itemCount ? `${table.itemCount} ítems` : 'Sin pedido'}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </Card>
+  );
+});
 
 export default function ManagerTablesScreen() {
   const { colors } = useTheme();
@@ -18,18 +64,28 @@ export default function ManagerTablesScreen() {
 
   const counts = useMemo(() => countByStatus(tables), [tables]);
   const byArea = useMemo(() => {
-    const groups = new Map<string, typeof tables>();
+    const groups = new Map<string, TableSnapshotItem[]>();
     for (const table of tables) {
       const key = table.areaName ?? 'Sin área';
       const current = groups.get(key) ?? [];
       current.push(table);
       groups.set(key, current);
     }
-    return Array.from(groups.entries());
+    return Array.from(groups.entries()) as AreaGroup[];
   }, [tables]);
 
-  return (
-    <Screen scroll refreshing={loading} onRefresh={refresh}>
+  const renderArea = useCallback(
+    ({ item: [areaName, areaTables] }: { item: AreaGroup }) => (
+      <AreaCard areaName={areaName} tables={areaTables} colors={colors} />
+    ),
+    [colors],
+  );
+
+  const showSkeleton = loading && tables.length === 0;
+  const showError = !showSkeleton && Boolean(error) && tables.length === 0;
+
+  const header = (
+    <View>
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Text style={[styles.title, { color: colors.text }]}>Ocupación</Text>
@@ -43,78 +99,76 @@ export default function ManagerTablesScreen() {
         </Text>
       </View>
 
-      {loading && tables.length === 0 ? (
-        <View style={styles.stack}>
-          <Skeleton height={90} />
-          <Skeleton height={140} />
-        </View>
-      ) : error && tables.length === 0 ? (
-        <EmptyState
-          icon="cloud-offline-outline"
-          title="No se pudo cargar la ocupación"
-          description={error}
-          actionLabel="Reintentar"
-          onAction={refresh}
-        />
-      ) : tables.length === 0 ? (
-        <EmptyState
-          icon="restaurant-outline"
-          title="Sin mesas"
-          description="Conecta el terminal con el backend para ver el estado de las mesas."
-        />
-      ) : (
-        <>
-          <View style={styles.summary}>
-            {STATUS_ORDER.map((status) => (
-              <Card key={status} style={styles.summaryTile}>
-                <Text style={[styles.summaryValue, { color: tableStatusColor(status, colors) }]}>
-                  {counts[status] ?? 0}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: colors.muted }]}>
-                  {status === 'AVAILABLE'
-                    ? 'Libres'
-                    : status === 'OCCUPIED'
-                      ? 'Ocupadas'
-                      : 'Reservadas'}
-                </Text>
-              </Card>
-            ))}
-          </View>
-
-          {byArea.map(([areaName, areaTables]) => (
-            <Card
-              key={areaName}
-              title={areaName}
-              subtitle={`${areaTables.length} mesas`}
-              style={styles.section}
-            >
-              <View style={styles.chips}>
-                {areaTables.map((table) => (
-                  <View
-                    key={table.id}
-                    style={[
-                      styles.chip,
-                      { borderColor: tableStatusColor(table.status, colors) },
-                    ]}
-                  >
-                    <Text style={[styles.chipNumber, { color: colors.text }]}>
-                      {table.number}
-                    </Text>
-                    <Text style={[styles.chipMeta, { color: colors.muted }]}>
-                      {table.itemCount ? `${table.itemCount} ítems` : 'Sin pedido'}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+      {tables.length > 0 ? (
+        <View style={styles.summary}>
+          {STATUS_ORDER.map((status) => (
+            <Card key={status} style={styles.summaryTile}>
+              <Text style={[styles.summaryValue, { color: tableStatusColor(status, colors) }]}>
+                {counts[status] ?? 0}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.muted }]}>
+                {status === 'AVAILABLE'
+                  ? 'Libres'
+                  : status === 'OCCUPIED'
+                    ? 'Ocupadas'
+                    : 'Reservadas'}
+              </Text>
             </Card>
           ))}
-        </>
-      )}
+        </View>
+      ) : null}
+    </View>
+  );
+
+  return (
+    <Screen padded={false}>
+      <FlatList
+        data={byArea}
+        keyExtractor={areaKey}
+        renderItem={renderArea}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={refresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+        ListEmptyComponent={
+          showSkeleton ? (
+            <View style={styles.stack}>
+              <Skeleton height={90} />
+              <Skeleton height={140} />
+            </View>
+          ) : showError ? (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="No se pudo cargar la ocupación"
+              description={error ?? undefined}
+              actionLabel="Reintentar"
+              onAction={refresh}
+            />
+          ) : (
+            <EmptyState
+              icon="restaurant-outline"
+              title="Sin mesas"
+              description="Conecta el terminal con el backend para ver el estado de las mesas."
+            />
+          )
+        }
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  listContent: {
+    flexGrow: 1,
+    padding: spacing.lg,
+  },
   header: {
     marginBottom: spacing.lg,
     gap: spacing.xs,
@@ -127,7 +181,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fonts.display,
+    fontWeight: 'normal',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: fontSize.sm,

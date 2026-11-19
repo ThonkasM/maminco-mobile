@@ -4,8 +4,9 @@
  * values as strings; always coerce with `toNumber()` before formatting.
  */
 
-export type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER';
+export type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER' | 'COOK';
 export type OrderStatus = 'DRAFT' | 'CLOSED' | 'CANCELLED';
+export type OrderKitchenStatus = 'PENDING' | 'PREPARING' | 'READY';
 export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED';
 
 export const MANAGER_ROLES: readonly UserRole[] = ['ADMINISTRATOR', 'MANAGER'];
@@ -99,6 +100,7 @@ export interface Order {
   id: string;
   orderNumber: string;
   status: OrderStatus;
+  kitchenStatus: OrderKitchenStatus;
   serviceType: string;
   subtotal: number | string;
   discountAmount: number | string;
@@ -204,7 +206,7 @@ export interface DailySales {
   averageOrderValue: number;
   totalDiscount: number;
   totalTips: number;
-  mesaOrders: number;
+  tableOrders: number;
   virtualOrders: number;
 }
 
@@ -221,23 +223,4 @@ export interface DailyReport {
   date: string;
   sales: DailySales;
   topProducts: TopProduct[];
-}
-
-export interface ForecastPoint {
-  date?: string;
-  label?: string;
-  value?: number;
-  predicted?: number;
-  predictedSales?: number;
-  lower?: number;
-  upper?: number;
-}
-
-export interface SalesForecast {
-  horizon?: number;
-  generatedAt?: string;
-  model?: string;
-  points?: ForecastPoint[];
-  data?: ForecastPoint[];
-  forecast?: ForecastPoint[];
 }

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -11,10 +12,10 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { fontSize, fontWeight, palette, radii, spacing, type ThemeColors } from '@/constants/theme';
+import { fontSize, fontWeight, gradients, palette, radii, spacing, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'accent';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'accent' | 'brand';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> {
@@ -43,6 +44,8 @@ function variantColors(
       return { background: colors.primary, border: colors.primary, content: colors.onPrimary };
     case 'accent':
       return { background: colors.accent, border: colors.accent, content: colors.onAccent };
+    case 'brand':
+      return { background: 'transparent', border: 'transparent', content: colors.onAccent };
     case 'secondary':
       return { background: colors.surfaceAlt, border: colors.surfaceAlt, content: colors.text };
     case 'outline':
@@ -72,6 +75,7 @@ export function Button({
   const { background, border, content } = variantColors(variant, colors);
   const dims = sizeStyles[size];
   const isDisabled = disabled || loading;
+  const isBrand = variant === 'brand';
 
   return (
     <Pressable
@@ -87,11 +91,20 @@ export function Button({
           borderColor: border,
           opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
         },
+        isBrand && styles.brand,
         fullWidth && styles.fullWidth,
         style,
       ]}
       {...rest}
     >
+      {isBrand ? (
+        <LinearGradient
+          colors={gradients.amberGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
       {loading ? (
         <ActivityIndicator color={content} size="small" />
       ) : (
@@ -117,6 +130,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: radii.md,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  brand: {
+    overflow: 'hidden',
   },
   fullWidth: {
     alignSelf: 'stretch',

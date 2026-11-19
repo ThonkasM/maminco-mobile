@@ -17,7 +17,7 @@ export function PeakHoursChart({
 }: PeakHoursChartProps) {
   const { colors } = useTheme();
 
-  const barColor = color ?? colors.accent;
+  const barColor = color ?? colors.primary;
 
   if (data.length === 0) return null;
 

@@ -20,7 +20,7 @@ export function PeakHoursChart({
 
   if (data.length === 0) return null;
 
-  const barColor = color ?? colors.accent;
+  const barColor = color ?? colors.primary;
   const max = Math.max(1, ...data.map((point) => point.value));
 
   return (

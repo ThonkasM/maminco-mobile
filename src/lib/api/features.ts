@@ -3,6 +3,7 @@ import { apiFetch } from './client';
 /** Known feature-flag keys (kept in sync with the backend seed). */
 export const FEATURE_KEYS = {
   waiterCanRemoveProducts: 'waiter_can_remove_products',
+  digitalKitchen: 'digital_kitchen',
 } as const;
 
 export interface FeatureFlag {

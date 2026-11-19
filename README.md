@@ -34,13 +34,14 @@ Quality gates:
 ```bash
 npm run typecheck         # tsc --noEmit
 npm run lint              # expo lint
+npm test                  # vitest unit tests (npm run test:cov for coverage)
 ```
 
 ## Environment
 
 | Variable                 | Default                                         | Notes                                            |
 | ------------------------ | ----------------------------------------------- | ------------------------------------------------ |
-| `EXPO_PUBLIC_API_URL`    | Android `http://10.0.2.2:3000`, else `localhost` | Backend base URL, no `/api` suffix               |
+| `EXPO_PUBLIC_API_URL`    | Dev only: Android `http://10.0.2.2:3000`, else `localhost`. Required in production | Backend base URL, no `/api` suffix               |
 | `EXPO_PUBLIC_SOCKET_URL` | falls back to `EXPO_PUBLIC_API_URL`             | socket.io base URL (namespace `/orders`)         |
 
 > Android emulators cannot reach the host via `localhost`; use `10.0.2.2`.
@@ -70,7 +71,7 @@ src/
   hooks/               # use-theme, use-async, use-tables-realtime
   lib/api/             # typed API client + per-domain modules
   lib/realtime/        # socket.io factory and helpers
-  providers/           # AuthProvider (JWT persisted in AsyncStorage)
+  providers/           # AuthProvider (JWT in expo-secure-store; memory only if unavailable)
 docs/                  # DESIGN.md, ARCHITECTURE.md
 ```
 

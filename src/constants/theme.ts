@@ -42,41 +42,66 @@ export interface ThemeColors {
   warning: string;
   danger: string;
   info: string;
+  /** Charcoal bars (tab bar, headers). */
+  nav: string;
+  /** Text/icon color placed on `nav`. */
+  navForeground: string;
+  /** Green for letters, buttons and active states on charcoal. */
+  menuGreen: string;
+  /** Leaf green used for the thin rule under charcoal headers. */
+  leaf: string;
 }
 
 export const lightColors: ThemeColors = {
-  background: '#f4f5f3',
+  background: '#faf7f0',
   surface: '#ffffff',
-  surfaceAlt: '#eceee9',
-  text: '#191919',
-  muted: '#6b7280',
-  primary: '#143f29',
+  surfaceAlt: '#f2ecdf',
+  text: '#1a1713',
+  muted: '#5a5348',
+  primary: '#35701a',
   onPrimary: '#ffffff',
   accent: '#fcbe28',
   onAccent: '#191919',
-  border: '#e0e3dd',
-  success: '#1f8a4c',
-  warning: '#d98314',
-  danger: '#c0392b',
+  border: '#e5dccb',
+  success: '#15803d',
+  warning: '#b45309',
+  danger: '#c62828',
   info: '#2563eb',
+  nav: '#121212',
+  navForeground: '#f4efe4',
+  menuGreen: '#457e20',
+  leaf: '#4c8f21',
 };
 
 export const darkColors: ThemeColors = {
-  background: '#191919',
-  surface: '#232323',
-  surfaceAlt: '#2c2c2c',
-  text: '#f5f5f5',
-  muted: '#a1a1a1',
-  primary: '#2f8f5f',
-  onPrimary: '#06120c',
-  accent: '#fcbe28',
+  background: '#131110',
+  surface: '#1b1815',
+  surfaceAlt: '#221f1b',
+  text: '#f1ece0',
+  muted: '#a79f90',
+  primary: '#417d1c',
+  onPrimary: '#ffffff',
+  accent: '#f2c14e',
   onAccent: '#191919',
-  border: '#333333',
-  success: '#3ecf7a',
-  warning: '#fcbe28',
-  danger: '#ff6b6b',
+  border: '#2f2a23',
+  success: '#1d7f45',
+  warning: '#b45309',
+  danger: '#c0392b',
   info: '#60a5fa',
+  nav: '#121212',
+  navForeground: '#f4efe4',
+  menuGreen: '#457e20',
+  leaf: '#4c8f21',
 };
+
+/** Gradient for primary calls to action (dark text on top). */
+export const gradients = {
+  amberGradient: ['#fcbe28', '#f26c1e'] as const,
+};
+
+export const fonts = {
+  display: 'Anton_400Regular',
+} as const;
 
 /** 4pt spacing scale. */
 export const spacing = {
@@ -93,10 +118,12 @@ export const radii = {
   md: 12,
   lg: 16,
   xl: 24,
+  xxl: 32,
   pill: 999,
 } as const;
 
 export const fontSize = {
+  xxs: 10,
   xs: 11,
   sm: 13,
   md: 15,
@@ -104,6 +131,8 @@ export const fontSize = {
   xl: 24,
   xxl: 32,
 } as const;
+
+export const dotSize = 10;
 
 export const fontWeight = {
   regular: '400',

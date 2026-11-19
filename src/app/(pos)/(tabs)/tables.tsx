@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -12,8 +13,11 @@ import {
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { TableTile } from '@/components/table-tile';
 import { Badge, EmptyState, Screen, Skeleton } from '@/components/ui';
 import {
+  dotSize,
+  fonts,
   fontSize,
   fontWeight,
   radii,
@@ -21,14 +25,20 @@ import {
   tableStatusColor,
   tableStatusLabel,
 } from '@/constants/theme';
+import type { TableSnapshotItem } from '@/lib/realtime/socket';
 import { useTheme } from '@/hooks/use-theme';
 import { useAsync } from '@/hooks/use-async';
 import { useTablesRealtime } from '@/hooks/use-tables-realtime';
 import { areasApi } from '@/lib/api';
-import { formatCurrency } from '@/lib/format';
 
 const MIN_COLUMNS = 3;
 const MAX_TILE_WIDTH = 132;
+
+const keyExtractor = (table: TableSnapshotItem) => table.id;
+
+function RowSeparator() {
+  return <View style={styles.separator} />;
+}
 
 export default function PosTablesScreen() {
   const { colors } = useTheme();
@@ -92,9 +102,19 @@ export default function PosTablesScreen() {
     }, [refresh, refreshAreas]),
   );
 
-  const openOrder = (tableId: string) => {
-    router.push(`/(pos)/orders/${tableId}`);
-  };
+  const openOrder = useCallback(
+    (tableId: string) => {
+      router.push(`/(pos)/orders/${tableId}`);
+    },
+    [router],
+  );
+
+  const renderTable = useCallback(
+    ({ item }: { item: TableSnapshotItem }) => (
+      <TableTile table={item} width={tileWidth} onPress={openOrder} />
+    ),
+    [tileWidth, openOrder],
+  );
 
   return (
     <Screen edges={['top', 'left', 'right']} padded={false}>
@@ -126,6 +146,9 @@ export default function PosTablesScreen() {
                 <Pressable
                   key={area.id}
                   onPress={() => setSelectedAreaId(area.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Área ${area.name}`}
+                  accessibilityState={{ selected: active }}
                   style={[
                     styles.areaChip,
                     {
@@ -158,13 +181,43 @@ export default function PosTablesScreen() {
       </View>
 
       <View style={styles.body}>
-        <ScrollView
+        <FlatList
+          key={columns}
+          data={showSkeleton ? [] : visibleTables}
+          keyExtractor={keyExtractor}
+          renderItem={renderTable}
+          numColumns={columns}
+          columnWrapperStyle={columns > 1 ? styles.row : undefined}
+          ItemSeparatorComponent={RowSeparator}
           contentContainerStyle={[
             styles.gridContainer,
             { paddingBottom: spacing.xxl + insets.bottom },
-            showEmpty && styles.gridContainerEmpty,
+            (showSkeleton || showEmpty) && styles.gridContainerEmpty,
           ]}
           showsVerticalScrollIndicator={false}
+          initialNumToRender={columns * 4}
+          windowSize={7}
+          removeClippedSubviews
+          ListEmptyComponent={
+            showSkeleton ? (
+              <View style={styles.row}>
+                {Array.from({ length: columns * 2 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    style={{ width: tileWidth, height: tileWidth, borderRadius: radii.lg }}
+                  />
+                ))}
+              </View>
+            ) : (
+              <EmptyState
+                icon="restaurant-outline"
+                title="Sin mesas en esta área"
+                description="Desliza hacia abajo para actualizar mesas y áreas."
+                actionLabel="Actualizar"
+                onAction={handleRefresh}
+              />
+            )
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -173,74 +226,7 @@ export default function PosTablesScreen() {
               colors={[colors.primary]}
             />
           }
-        >
-          {showSkeleton ? (
-            <View style={styles.grid}>
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  style={{ width: tileWidth, height: tileWidth, borderRadius: radii.lg }}
-                />
-              ))}
-            </View>
-          ) : showEmpty ? (
-            <EmptyState
-              icon="restaurant-outline"
-              title="Sin mesas en esta área"
-              description="Desliza hacia abajo para actualizar mesas y áreas."
-              actionLabel="Actualizar"
-              onAction={handleRefresh}
-            />
-          ) : (
-            <View style={styles.grid}>
-              {visibleTables.map((table) => {
-              const statusColor = tableStatusColor(table.status, colors);
-              return (
-                <Pressable
-                  key={table.id}
-                  onPress={() => openOrder(table.id)}
-                  style={({ pressed }) => [
-                    styles.tile,
-                    {
-                      width: tileWidth,
-                      backgroundColor: colors.surface,
-                      borderColor: statusColor,
-                      opacity: pressed ? 0.85 : 1,
-                    },
-                  ]}
-                >
-                  <View style={styles.tileTop}>
-                    <Text style={[styles.tileNumber, { color: colors.text }]}>{table.number}</Text>
-                    <View style={[styles.statusPill, { backgroundColor: `${statusColor}22` }]}>
-                      <Text style={[styles.statusPillText, { color: statusColor }]}>
-                        {tableStatusLabel(table.status)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.tileBottom}>
-                    {table.hasActiveOrder ? (
-                      <>
-                        <Text style={[styles.tileTotal, { color: colors.text }]} numberOfLines={1}>
-                          {formatCurrency(table.currentOrderTotal ?? 0)}
-                        </Text>
-                        <Text style={[styles.tileMeta, { color: colors.muted }]} numberOfLines={1}>
-                          {table.itemCount ?? 0} ítems
-                          {table.createdByName ? ` · ${table.createdByName}` : ''}
-                        </Text>
-                      </>
-                    ) : (
-                      <Text style={[styles.tileMeta, { color: colors.muted }]} numberOfLines={1}>
-                        {table.status === 'AVAILABLE' ? 'Sin pedido' : tableStatusLabel(table.status)}
-                      </Text>
-                    )}
-                  </View>
-                </Pressable>
-              );
-              })}
-            </View>
-          )}
-        </ScrollView>
+        />
       </View>
     </Screen>
   );
@@ -261,7 +247,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fonts.display,
+    fontWeight: 'normal',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: fontSize.sm,
@@ -289,51 +278,17 @@ const styles = StyleSheet.create({
   gridContainerEmpty: {
     justifyContent: 'center',
   },
-  grid: {
+  row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.md,
   },
-  tile: {
-    aspectRatio: 1,
-    borderRadius: radii.lg,
-    borderWidth: 2,
-    padding: spacing.md,
-    justifyContent: 'space-between',
-  },
-  tileTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
-  },
-  tileNumber: {
-    fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
-  },
-  statusPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radii.pill,
-  },
-  statusPillText: {
-    fontSize: 10,
-    fontWeight: fontWeight.semibold,
-  },
-  tileBottom: {
-    gap: 2,
-  },
-  tileTotal: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
+  separator: {
+    height: spacing.md,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  tileMeta: {
-    fontSize: fontSize.xs,
+    width: dotSize,
+    height: dotSize,
+    borderRadius: dotSize / 2,
   },
   legend: {
     flexDirection: 'row',

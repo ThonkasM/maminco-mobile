@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { isForbidden, tablesApi } from '@/lib/api';
 import type { TableStatus } from '@/lib/api/types';
@@ -11,6 +11,7 @@ import {
   type TableStatusChangedEvent,
   type TablesSnapshotEvent,
 } from '@/lib/realtime/socket';
+import { useRealtimeResume } from '@/hooks/use-realtime-resume';
 import { useAuth } from '@/providers/auth-provider';
 
 export interface TablesRealtimeResult {
@@ -19,6 +20,80 @@ export interface TablesRealtimeResult {
   error: string | null;
   connected: boolean;
   refresh: () => Promise<void>;
+}
+
+interface TablesState {
+  byId: Record<string, TableSnapshotItem>;
+  ids: string[];
+}
+
+type TablesAction =
+  | { type: 'merge'; tables: TableSnapshotItem[] }
+  | { type: 'replace'; tables: TableSnapshotItem[] }
+  | { type: 'status'; event: TableStatusChangedEvent };
+
+function sameTable(a: TableSnapshotItem, b: TableSnapshotItem): boolean {
+  return (
+    a.number === b.number &&
+    a.status === b.status &&
+    a.areaId === b.areaId &&
+    a.areaName === b.areaName &&
+    a.hasActiveOrder === b.hasActiveOrder &&
+    a.currentOrderTotal === b.currentOrderTotal &&
+    a.itemCount === b.itemCount &&
+    a.createdByName === b.createdByName
+  );
+}
+
+function sortedIds(byId: Record<string, TableSnapshotItem>): string[] {
+  return Object.keys(byId).sort((a, b) => byId[a].number - byId[b].number);
+}
+
+function upsert(state: TablesState, incoming: TableSnapshotItem[]): TablesState {
+  let byId = state.byId;
+  let needsSort = false;
+  for (const table of incoming) {
+    const current = byId[table.id];
+    if (current && sameTable(current, table)) continue;
+    if (byId === state.byId) byId = { ...state.byId };
+    if (!current || current.number !== table.number) needsSort = true;
+    byId[table.id] = table;
+  }
+  if (byId === state.byId) return state;
+  return { byId, ids: needsSort ? sortedIds(byId) : state.ids };
+}
+
+function tablesReducer(state: TablesState, action: TablesAction): TablesState {
+  switch (action.type) {
+    case 'merge':
+      return upsert(
+        state,
+        action.tables.map((table) => ({ ...state.byId[table.id], ...table })),
+      );
+    case 'replace': {
+      const next = upsert(state, action.tables);
+      const incomingIds = new Set(action.tables.map((table) => table.id));
+      const stale = next.ids.filter((id) => !incomingIds.has(id));
+      if (stale.length === 0) return next;
+      const byId = { ...next.byId };
+      for (const id of stale) delete byId[id];
+      return { byId, ids: next.ids.filter((id) => incomingIds.has(id)) };
+    }
+    case 'status': {
+      const { event } = action;
+      const existing = state.byId[event.tableId];
+      return upsert(state, [
+        {
+          ...existing,
+          id: event.tableId,
+          number: existing?.number ?? 0,
+          status: event.status,
+          areaId: event.areaId ?? existing?.areaId ?? '',
+          areaName: event.areaName ?? existing?.areaName,
+        },
+      ]);
+    }
+  }
 }
 
 /**
@@ -32,7 +107,7 @@ export function useTablesRealtime(): TablesRealtimeResult {
   const { session } = useAuth();
   const token = session?.token;
 
-  const [byId, setById] = useState<Record<string, TableSnapshotItem>>({});
+  const [state, dispatch] = useReducer(tablesReducer, { byId: {}, ids: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
@@ -40,18 +115,15 @@ export function useTablesRealtime(): TablesRealtimeResult {
   const loadRest = useCallback(async () => {
     try {
       const response = await tablesApi.getTables({ limit: 100 });
-      setById((prev) => {
-        const next = { ...prev };
-        for (const table of response.data) {
-          next[table.id] = {
-            id: table.id,
-            number: table.number,
-            status: table.status,
-            areaId: table.areaId,
-            areaName: table.areaName,
-          };
-        }
-        return next;
+      dispatch({
+        type: 'merge',
+        tables: response.data.map((table) => ({
+          id: table.id,
+          number: table.number,
+          status: table.status,
+          areaId: table.areaId,
+          areaName: table.areaName,
+        })),
       });
       setError(null);
     } catch (err) {
@@ -76,30 +148,14 @@ export function useTablesRealtime(): TablesRealtimeResult {
 
     const onSnapshot = (event: TablesSnapshotEvent) => {
       if (!event?.tables) return;
-      const next: Record<string, TableSnapshotItem> = {};
-      for (const table of event.tables) next[table.id] = table;
-      setById(next);
+      dispatch({ type: 'replace', tables: event.tables });
       setLoading(false);
       setError(null);
     };
 
     const onStatusChanged = (event: TableStatusChangedEvent) => {
       if (!event?.tableId) return;
-      setById((prev) => {
-        const existing = prev[event.tableId];
-        const updated: TableSnapshotItem = {
-          id: event.tableId,
-          number: existing?.number ?? 0,
-          status: event.status,
-          areaId: event.areaId ?? existing?.areaId ?? '',
-          areaName: event.areaName ?? existing?.areaName,
-          hasActiveOrder: existing?.hasActiveOrder,
-          currentOrderTotal: existing?.currentOrderTotal,
-          itemCount: existing?.itemCount,
-          createdByName: existing?.createdByName,
-        };
-        return { ...prev, [event.tableId]: updated };
-      });
+      dispatch({ type: 'status', event });
     };
 
     const onConnect = () => {
@@ -123,16 +179,17 @@ export function useTablesRealtime(): TablesRealtimeResult {
     };
   }, [token]);
 
-  const tables = useMemo(
-    () => Object.values(byId).sort((a, b) => a.number - b.number),
-    [byId],
-  );
+  const tables = useMemo(() => state.ids.map((id) => state.byId[id]), [state]);
 
   const refresh = useCallback(async () => {
     await loadRest();
     const socket = getExistingOrdersSocket();
     if (socket) subscribeTablesStatus(socket);
   }, [loadRest]);
+
+  useRealtimeResume(() => {
+    void refresh();
+  }, Boolean(token));
 
   return { tables, loading, error, connected, refresh };
 }

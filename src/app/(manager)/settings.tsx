@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BackButton } from '@/components/back-button';
 import { Badge, Card, EmptyState, Screen, Skeleton } from '@/components/ui';
 import type { BadgeTone } from '@/components/ui';
-import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
+import { fonts, fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useAsync } from '@/hooks/use-async';
 import { useErrorNotification } from '@/hooks/use-error-notification';
 import { useTheme } from '@/hooks/use-theme';
@@ -298,7 +298,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fonts.display,
+    fontWeight: 'normal',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: fontSize.sm,

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, Screen } from '@/components/ui';
-import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
+import { fonts, fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { API_BASE } from '@/lib/api';
 import { roleLabel } from '@/lib/format';
@@ -76,7 +76,10 @@ export default function PosProfileScreen() {
 const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fonts.display,
+    fontWeight: 'normal',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: spacing.lg,
   },
   card: {

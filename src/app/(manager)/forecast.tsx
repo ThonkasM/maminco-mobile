@@ -4,10 +4,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { BackButton } from '@/components/back-button';
 import { BarChart, type BarDatum } from '@/components/bar-chart';
 import { Card, EmptyState, Screen, Skeleton } from '@/components/ui';
-import { fontSize, fontWeight, spacing } from '@/constants/theme';
+import { fonts, fontSize, fontWeight, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { forecastApi, isNotFound } from '@/lib/api';
-import type { ForecastPoint } from '@/lib/api/types';
+import { aiApi, isNotFound } from '@/lib/api';
+import type { AiSalesForecastPoint } from '@/lib/api/ai';
 import { formatCurrency, getErrorMessage } from '@/lib/format';
 import { useErrorNotification } from '@/hooks/use-error-notification';
 
@@ -16,21 +16,20 @@ type ForecastState = 'loading' | 'ready' | 'empty' | 'error';
 export default function ManagerForecastScreen() {
   const { colors } = useTheme();
   const [state, setState] = useState<ForecastState>('loading');
-  const [points, setPoints] = useState<ForecastPoint[]>([]);
+  const [points, setPoints] = useState<AiSalesForecastPoint[]>([]);
   const [message, setMessage] = useState('');
 
   const load = useCallback(async () => {
     setState('loading');
     setMessage('');
     try {
-      const response = await forecastApi.getSalesForecast(7);
-      const normalized = forecastApi.normalizeForecastPoints(response);
-      if (normalized.length === 0) {
+      const response = await aiApi.getSalesForecast(7);
+      if (response.insufficient_data || response.forecast.length === 0) {
         setState('empty');
         setMessage('El modelo no devolvió datos para los próximos días.');
         return;
       }
-      setPoints(normalized);
+      setPoints(response.forecast);
       setState('ready');
     } catch (err) {
       if (isNotFound(err)) {
@@ -49,9 +48,9 @@ export default function ManagerForecastScreen() {
 
   useErrorNotification(state === 'error' ? message : null, points.length > 0);
 
-  const bars: BarDatum[] = points.map((point, index) => ({
-    label: forecastApi.forecastPointLabel(point, index),
-    value: forecastApi.forecastPointValue(point),
+  const bars: BarDatum[] = points.map((point) => ({
+    label: new Date(point.date).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' }),
+    value: point.predicted_sales,
   }));
 
   return (
@@ -111,7 +110,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fonts.display,
+    fontWeight: 'normal',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: fontSize.sm,

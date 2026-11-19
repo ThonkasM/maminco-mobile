@@ -23,7 +23,7 @@ function toneColors(tone: BadgeTone, colors: ThemeColors): { background: string;
     case 'success':
       return { background: colors.success, text: palette.white };
     case 'warning':
-      return { background: colors.warning, text: palette.darkGray };
+      return { background: colors.warning, text: palette.white };
     case 'danger':
       return { background: colors.danger, text: palette.white };
     case 'info':

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { fontSize, fontWeight, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Button } from './Button';
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: radii.xxl,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,

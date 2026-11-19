@@ -63,7 +63,7 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
       style={[
         styles.wrapper,
         {
-          backgroundColor: colors.background,
+          backgroundColor: colors.nav,
           paddingLeft: spacing.lg + insets.left,
           paddingRight: spacing.lg + insets.right,
           paddingBottom: insets.bottom || spacing.sm,
@@ -72,17 +72,17 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
     >
       <View
         onLayout={handleBarLayout}
-        style={[styles.bar, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        style={[styles.bar, { backgroundColor: colors.nav, borderColor: colors.leaf }]}
       >
         {tabWidth > 0 ? (
-          <Animated.View style={[styles.pill, { backgroundColor: colors.accent }, pillStyle]} />
+          <Animated.View style={[styles.pill, { backgroundColor: colors.menuGreen }, pillStyle]} />
         ) : null}
 
         {state.routes.map((route, index) => {
           const isActive = index === activeIndex;
           const { options } = descriptors[route.key] ?? {};
           const label = typeof options?.title === 'string' ? options.title : route.name;
-          const color = isActive ? colors.onAccent : colors.muted;
+          const color = colors.navForeground;
           const icon = options?.tabBarIcon?.({ focused: isActive, color, size: 22 });
 
           return (
@@ -107,7 +107,7 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
               accessibilityLabel={options?.tabBarAccessibilityLabel ?? label}
               style={({ pressed }) => [
                 styles.tabItem,
-                { width: tabWidth, opacity: pressed ? 0.7 : 1 },
+                { width: tabWidth, opacity: pressed ? 0.7 : isActive ? 1 : 0.65 },
               ]}
             >
               {icon ?? <Ionicons name="ellipse-outline" size={22} color={color} />}

@@ -4,6 +4,7 @@ import type {
   ChangeOrderStatusPayload,
   CreateOrderPayload,
   Order,
+  OrderKitchenStatus,
   OrderStatus,
   Paginated,
   UpdateOrderItemPayload,
@@ -13,6 +14,7 @@ export interface ListOrdersParams {
   page?: number;
   limit?: number;
   status?: OrderStatus;
+  kitchenStatus?: OrderKitchenStatus;
   tableId?: string;
   serviceType?: string;
   createdById?: string;
@@ -25,11 +27,28 @@ export function getOrders(params: ListOrdersParams = {}): Promise<Paginated<Orde
   query.set('page', String(params.page ?? 1));
   query.set('limit', String(params.limit ?? 20));
   if (params.status) query.set('status', params.status);
+  if (params.kitchenStatus) query.set('kitchenStatus', params.kitchenStatus);
   if (params.tableId) query.set('tableId', params.tableId);
   if (params.serviceType) query.set('serviceType', params.serviceType);
   if (params.createdById) query.set('createdById', params.createdById);
   if (params.onlyOpen !== undefined) query.set('onlyOpen', String(params.onlyOpen));
   return apiFetch<Paginated<Order>>(`/api/orders?${query.toString()}`);
+}
+
+/** GET /api/orders/kitchen - open (DRAFT) orders with items for the kitchen screen. */
+export function getKitchenOrders(): Promise<Order[]> {
+  return apiFetch<Order[]>('/api/orders/kitchen');
+}
+
+/** PATCH /api/orders/:id/kitchen-status */
+export function updateKitchenStatus(
+  orderId: string,
+  status: OrderKitchenStatus,
+): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${orderId}/kitchen-status`, {
+    method: 'PATCH',
+    body: { status },
+  });
 }
 
 /** GET /api/orders/table/:tableId/active - returns `null` when no DRAFT order. */

@@ -4,7 +4,7 @@ import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { Button, Card, Input, Screen } from '@/components/ui';
-import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
+import { fonts, fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getErrorMessage } from '@/lib/format';
 import { useAuth } from '@/providers/auth-provider';
@@ -51,7 +51,7 @@ export default function LoginScreen() {
         style={styles.flex}
       >
         <View style={styles.brand}>
-          <Image source={require('@/assets/icons/maminco-logo.png')} style={styles.logo} />
+          <Image source={require('@/assets/icons/maminco-logo-192.png')} style={styles.logo} />
           <Text style={[styles.title, { color: colors.text }]}>Maminco</Text>
           <Text style={[styles.subtitle, { color: colors.muted }]}>
             Sistema de punto de venta
@@ -97,6 +97,7 @@ export default function LoginScreen() {
 
             <Button
               title="Ingresar"
+              variant="brand"
               onPress={handleSubmit}
               loading={loading}
               fullWidth
@@ -136,7 +137,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fonts.display,
+    fontWeight: 'normal',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: fontSize.md,

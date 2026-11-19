@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Anton_400Regular } from '@expo-google-fonts/anton';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { OfflineBanner } from '@/components/offline-banner';
 import { useTheme } from '@/hooks/use-theme';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 import { FeedbackProvider } from '@/providers/feedback-provider';
@@ -17,7 +19,7 @@ import { FeedbackProvider } from '@/providers/feedback-provider';
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({ ...Ionicons.font });
+  const [fontsLoaded] = useFonts({ ...Ionicons.font, Anton_400Regular });
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -37,6 +39,7 @@ export default function RootLayout() {
 function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { colors, isDark } = useTheme();
   const { status, user, isManager } = useAuth();
+  const isCook = user?.role === 'COOK';
   const segments = useSegments() as string[];
   const router = useRouter();
   const ready = fontsLoaded && status !== 'loading';
@@ -62,16 +65,23 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
     }
 
     if (onLogin) {
-      router.replace(isManager ? '/(manager)' : '/(pos)/tables');
+      router.replace(
+        isCook ? '/(kitchen)/kitchen' : isManager ? '/(manager)' : '/(pos)/tables',
+      );
+      return;
+    }
+
+    if (isCook) {
+      if (root !== '(kitchen)') router.replace('/(kitchen)/kitchen');
       return;
     }
 
     if (isManager) {
-      if (root === '(pos)') router.replace('/(manager)');
-    } else if (root === '(manager)' || atRoot) {
+      if (root === '(pos)' || root === '(kitchen)') router.replace('/(manager)');
+    } else if (root === '(manager)' || root === '(kitchen)' || atRoot) {
       router.replace('/(pos)/tables');
     }
-  }, [ready, user, isManager, segments, router]);
+  }, [ready, user, isCook, isManager, segments, router]);
 
   if (!ready) {
     return (
@@ -84,6 +94,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      <OfflineBanner />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -93,6 +104,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Screen name="login" />
         <Stack.Screen name="(manager)" />
         <Stack.Screen name="(pos)" />
+        <Stack.Screen name="(kitchen)" />
       </Stack>
     </ThemeProvider>
   );

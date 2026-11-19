@@ -1,11 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { authApi, setAuthToken, setUnauthorizedHandler, MANAGER_ROLES } from '@/lib/api';
 import { disconnectOrdersSocket } from '@/lib/realtime/socket';
 import type { User, UserRole } from '@/lib/api/types';
-
-const STORAGE_KEY = 'maminco.auth';
+import { clearSession, loadSession, saveSession } from '@/lib/storage/session-storage';
 
 export interface Session {
   token: string;
@@ -39,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     disconnectOrdersSocket();
     setSession(null);
     setStatus('unauthenticated');
-    await AsyncStorage.removeItem(STORAGE_KEY).catch(() => undefined);
+    await clearSession().catch(() => undefined);
   }, []);
 
   // A 401 from any request forces a logout.
@@ -55,20 +53,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     void (async () => {
       try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as Session;
-          if (parsed?.token && parsed?.user?.id) {
-            setAuthToken(parsed.token);
-            if (active) {
-              setSession(parsed);
-              setStatus('authenticated');
-              return;
-            }
+        const stored = await loadSession();
+        if (stored) {
+          setAuthToken(stored.token);
+          if (active) {
+            setSession(stored);
+            setStatus('authenticated');
+            return;
           }
         }
       } catch {
-        // Ignore malformed cache and fall through to unauthenticated.
+        // Unreadable storage falls through to unauthenticated.
       }
       if (active) setStatus('unauthenticated');
     })();
@@ -83,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthToken(next.token);
     setSession(next);
     setStatus('authenticated');
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)).catch(() => undefined);
+    await saveSession(next).catch(() => undefined);
   }, []);
 
   const value = useMemo<AuthContextValue>(

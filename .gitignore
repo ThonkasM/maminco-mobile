@@ -42,3 +42,6 @@ yarn-error.*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# test coverage
+coverage/

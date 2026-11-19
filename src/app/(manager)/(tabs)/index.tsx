@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { KpiTile } from '@/components/kpi-tile';
 import { Card, EmptyState, Screen, Skeleton } from '@/components/ui';
-import { fontSize, fontWeight, radii, spacing } from '@/constants/theme';
+import { fonts, fontSize, fontWeight, radii, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAsync } from '@/hooks/use-async';
 import { useErrorNotification } from '@/hooks/use-error-notification';
@@ -133,7 +133,7 @@ export default function ManagerDashboardScreen() {
             <View style={styles.detailRow}>
               <Text style={[styles.detailLabel, { color: colors.muted }]}>Órdenes en mesa</Text>
               <Text style={[styles.detailValue, { color: colors.text }]}>
-                {formatNumber(sales?.mesaOrders)}
+                {formatNumber(sales?.tableOrders)}
               </Text>
             </View>
             <View style={styles.detailRow}>
@@ -180,7 +180,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fonts.display,
+    fontWeight: 'normal',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: fontSize.sm,
